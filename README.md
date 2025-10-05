@@ -1,22 +1,28 @@
 # Lyvra Backend (NestJS)
 
-Welcome to the backend of the Lyvra application, built with NestJS—a progressive Node.js framework for building efficient and scalable server-side applications.
+Welcome to the **Lyvra Backend**, a scalable and secure server-side application built with **NestJS**. This project handles authentication, database interactions, and core API functionality for the Lyvra application.
 
-## 🛠️ Technologies Used
+---
 
-- **NestJS**: A framework for building efficient, reliable, and scalable server-side applications.
-- **Prisma**: A next-generation ORM for Node.js and TypeScript.
-- **Passport**: Authentication middleware for Node.js.
-- **JWT**: JSON Web Tokens for secure authentication.
-- **ESLint & Prettier**: Code quality and formatting tools.
-- **TypeScript**: A superset of JavaScript that adds static types.
+## 🛠️ Technologies & Tools
+
+* **NestJS** - A progressive Node.js framework for building efficient and scalable server-side applications.
+* **Prisma** - Next-generation ORM for seamless database management.
+* **Passport & JWT** - Authentication middleware with token-based authentication.
+* **TypeScript** - Strongly typed JavaScript for better developer experience.
+* **ESLint & Prettier** - Ensures code quality and consistent formatting.
+
+---
 
 ## 🚀 Features
 
-- Modular architecture with clear separation of concerns.
-- JWT-based authentication with Passport strategy.
-- Prisma ORM for seamless database interactions.
-- Configurable environment variables for flexible deployments.
+* Modular architecture for maintainable code.
+* JWT-based authentication system.
+* Prisma ORM for database operations.
+* Configurable via environment variables.
+* Ready for production deployment.
+
+---
 
 ## 📦 Installation
 
@@ -26,37 +32,93 @@ Clone the repository and install dependencies:
 git clone https://github.com/am-goku/lyvra-backend-nestjs.git
 cd lyvra-backend-nestjs
 npm install
-⚙️ Configuration
-Create a .env file in the root directory and add the following environment variables:
-
-env
-Copy code
-DATABASE_URL=your-database-connection-string
-JWT_SECRET=your-secret-key
-Replace your-database-connection-string with your actual database connection string and your-secret-key with a secure JWT secret.
-
-🧪 Running the Application
-To run the application in development mode:
-
-bash
-Copy code
-npm run start:dev
-This will start the application with hot-reloading enabled.
-
-🧪 Running Tests
-To run the tests:
-
-bash
-Copy code
-npm run test
-📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-yaml
-Copy code
+```
 
 ---
 
-Feel free to copy this `README.md` into your repository. If you need further customization or additional sections, such as deployment instructions or API documentation, let me know!
-::contentReference[oaicite:0]{index=0}
- 
+## ⚙️ Configuration
+
+Create a `.env` file in the root directory and add the following environment variables:
+
+```env
+# Server
+PORT=3000
+
+# Database
+DATABASE_URL=your-database-connection-string
+
+# JWT
+JWT_SECRET=your-secret-key
+JWT_EXPIRES_IN=1d
+```
+
+> Replace placeholders with your actual configuration values.
+
+---
+
+## 🧪 Running the Application
+
+### Development Mode (Hot Reloading)
+
+```bash
+npm run start:dev
+```
+
+### Production Mode
+
+```bash
+npm run build
+npm run start:prod
+```
+
+The backend will be available at `http://localhost:3000` (or your configured PORT).
+
+---
+
+## 🔑 Authentication
+
+* **JWT** authentication using Passport strategies.
+* Endpoints for registration, login, and token validation.
+* Modular Auth system for easy extension.
+
+---
+
+## 🧪 Testing
+
+Run unit and e2e tests using Jest:
+
+```bash
+npm run test       # Unit tests
+npm run test:e2e   # End-to-end tests
+npm run test:cov   # Test coverage
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## 💡 Notes
+
+* Ensure the database is running before starting the application.
+* Configure your `.env` properly for JWT and database connections.
+* This backend is ready to connect with your frontend application or mobile app.
+
+---
+
+## 📂 Project Structure (Optional)
+
+```
+src/
+├── auth/           # Authentication module
+├── prisma/         # Prisma module & client
+├── users/          # User module
+├── main.ts         # App entry point
+```
+
+---
+
+Happy coding! ✨
