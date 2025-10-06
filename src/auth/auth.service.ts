@@ -18,13 +18,14 @@ export class AuthService {
             data: {
                 email: dto.email,
                 password: hashtedPassword,
+                role: 'USER', // default role
             }
         });
 
-        const payload = { sub: user.id, email: user.email };
+        const payload = { sub: user.id, email: user.email, role: user.role };
         const token = this.jwtSerice.sign(payload);
 
-        return { user: { id: user.id, email: user.email }, token };
+        return { user: { id: user.id, email: user.email, role: user.role }, token };
     }
 
     async login(dto: LoginDto) {
@@ -37,9 +38,9 @@ export class AuthService {
         const valid = await bcrypt.compare(dto.password, user.password);
         if (!valid) throw new Error('Invalid credentials');
 
-        const payload = { sub: user.id, email: user.email };
+        const payload = { sub: user.id, email: user.email, role: user.role };
         const token = this.jwtSerice.sign(payload);
 
-        return { user: { id: user.id, email: user.email }, token };
+        return { user: { id: user.id, email: user.email, role: user.role }, token };
     }
 }
