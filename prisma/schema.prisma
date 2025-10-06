@@ -14,9 +14,23 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
 
+  Product Product[]
+}
 enum Role {
   USER
   ADMIN
 }
+
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int
+  user        User     @relation(fields: [createdBy], references: [id])
+}
+
