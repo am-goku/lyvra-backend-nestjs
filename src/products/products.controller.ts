@@ -1,19 +1,36 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('products')
 export class ProductsController {
-    constructor(private readonly productsService: ProductsService) {}
+    constructor(
+        private readonly productsService: ProductsService,
+        private readonly cloudinaryService: CloudinaryService
+    ) {}
 
     @Post()
     @UseGuards(AuthGuard('jwt'))
-    create(@Body() dto: CreateProductDto, @Req() req) {
-        return this.productsService.create(dto, req.user.userId);
+    @UseInterceptors(FileInterceptor('image'))
+    async create(
+        @UploadedFile() file: Express.Multer.File,
+        @Body() dto: CreateProductDto,
+        @Req() req
+    ) {
+        let imageUrl: string | undefined;
+
+        if(file) {
+            const uploaded = await this.cloudinaryService.uploadImage(file);
+            imageUrl = uploaded.secure_url;
+        }
+
+        return this.productsService.create({...dto, imageUrl}, req.user.userId);
     }
 
     @Get()
