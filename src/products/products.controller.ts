@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -34,8 +34,9 @@ export class ProductsController {
     }
 
     @Get()
-    findAll() {
-        return this.productsService.findAll();
+    findAll(@Query('categoryIds') categoryIds: string) {
+        const ids = categoryIds ? categoryIds.split(',').map(id => +id) : undefined;
+        return this.productsService.findAll(ids);
     }
 
     @Get(':id')

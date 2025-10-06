@@ -20,7 +20,20 @@ export class ProductsService {
         })
     }
 
-    findAll() {
+    findAll(categoryIds?:number[]) {
+        if(categoryIds && categoryIds.length > 0) {
+            return this.prisma.product.findMany({
+                where: {
+                    categories: {
+                        some: {
+                            id: {in: categoryIds}
+                        }
+                    }
+                },
+                include: {categories: true, user: {select: {id: true, email: true}}}
+            })
+        }
+
         return this.prisma.product.findMany({
             include: { user: { select: { id: true, email: true } } }
         })
