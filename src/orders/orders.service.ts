@@ -33,7 +33,7 @@ export class OrdersService {
                         price: products.find(p => p.id === item.productId)?.price || 0,
                         product: { connect: { id: item.productId } }
                     }))
-                }
+                },
             },
             include: {
                 orderItems: { include: { product: true } }
