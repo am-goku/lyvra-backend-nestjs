@@ -8,8 +8,15 @@ export class ProductsService {
     constructor(private prisma: PrismaService) { }
 
     create(dto: CreateProductDto, userId: number) {
+        const { categoryIds, ...rest } = dto;
         return this.prisma.product.create({
-            data: { ...dto, createdBy: userId }
+            data: {
+                ...rest,
+                createdBy: userId,
+                categories: categoryIds
+                    ? { connect: categoryIds.map(id => ({ id })) }
+                    : undefined,
+            },
         })
     }
 

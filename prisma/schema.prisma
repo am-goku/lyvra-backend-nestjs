@@ -33,5 +33,11 @@ model Product {
   updatedAt   DateTime @updatedAt
   createdBy   Int
   user        User     @relation(fields: [createdBy], references: [id])
+  categories  Category[] @relation("ProductCategories")
 }
 
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  products  Product[] @relation("ProductCategories")
+}
