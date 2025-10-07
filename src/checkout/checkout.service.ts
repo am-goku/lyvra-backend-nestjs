@@ -21,7 +21,9 @@ export class CheckoutService {
             data: {
                 userId,
                 total,
-                paymentStatus: "PENDING",
+                orderStatus: "PROCESSING", // Directly pushing to process the order
+                paymentStatus: "PENDING", // Checkout service for cash-on-delivery (by default pending)
+                paymentMethod: "COD", // Service for cash-on-delivery (by default COD)
                 orderItems: {
                     create: cart.items.map((item) => ({
                         productId: item.productId,

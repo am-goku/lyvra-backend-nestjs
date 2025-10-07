@@ -48,15 +48,17 @@ model Category {
 }
 
 model Order {
-  id            Int           @id @default(autoincrement())
-  userId        Int
-  user          User          @relation(fields: [userId], references: [id])
-  total         Float
-  orderStatus   OrderStatus   @default(PENDING)
-  paymentStatus PaymentStatus @default(PENDING)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  orderItems    OrderItem[]
+  id               Int           @id @default(autoincrement())
+  userId           Int
+  user             User          @relation(fields: [userId], references: [id])
+  total            Float
+  orderStatus      OrderStatus   @default(PENDING)
+  paymentStatus    PaymentStatus @default(PENDING)
+  paymentSessionId String?       @unique
+  paymentMethod    PaymentMethod @default(STRIPE)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  orderItems       OrderItem[]
 }
 
 enum OrderStatus {
@@ -73,6 +75,14 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+}
+
+enum PaymentMethod {
+  STRIPE
+  COD
+  PAYPAL
+  RAZORPAY
+  OTHER
 }
 
 model OrderItem {
