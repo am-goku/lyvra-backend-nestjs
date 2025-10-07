@@ -22,64 +22,65 @@ export class PaymentService {
             include: { items: { include: { product: true } } }
         });
 
-        if (!cart || cart.items.length === 0) {
+        if (!cart || cart.items.length === 0)
             throw new BadRequestException('Cart is empty.');
-        }
 
         // Calculating total amount
         const total = cart.items.reduce((sum, item) => sum = sum + (item.product.price * item.quantity), 0)
 
-        // Step 1: Create a pending order
-        const order = await this.prisma.order.create({
-            data: {
-                userId,
-                total,
-                orderStatus: 'PENDING',
-                paymentStatus: 'PENDING',
-                paymentMethod: 'STRIPE',
-                orderItems: {
-                    create: cart.items.map((item) => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        price: item.product.price,
-                    })),
+        return await this.prisma.$transaction(async (txn) => {
+            // Step 1: Create a pending order
+            const order = await txn.order.create({
+                data: {
+                    userId,
+                    total,
+                    orderStatus: 'PENDING',
+                    paymentStatus: 'PENDING',
+                    paymentMethod: 'STRIPE',
+                    orderItems: {
+                        create: cart.items.map((item) => ({
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            price: item.product.price,
+                        })),
+                    },
                 },
-            },
-        });
+            });
 
-        const lineItems = cart.items.map((item) => ({
-            price_data: {
-                currency: 'usd',
-                product_data: { name: item.product.name },
-                unit_amount: Math.round(item.product.price * 100), // Stripe uses cents(or by 100)
-            },
-            quantity: item.quantity
-        }));
+            const lineItems = cart.items.map((item) => ({
+                price_data: {
+                    currency: 'usd',
+                    product_data: { name: item.product.name },
+                    unit_amount: Math.round(item.product.price * 100), // Stripe uses cents(or by 100)
+                },
+                quantity: item.quantity
+            }));
 
-        const session = await this.stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            mode: 'payment',
-            line_items: lineItems,
-            metadata: {
-                orderId: order.id.toString(),
-                userId: userId.toString()
-            },
-            success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+            const session = await this.stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                mode: 'payment',
+                line_items: lineItems,
+                metadata: {
+                    orderId: order.id.toString(),
+                    userId: userId.toString()
+                },
+                success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+            })
+
+            // Step 3: Save Stripe session ID
+            await txn.order.update({
+                where: { id: order.id },
+                data: {
+                    paymentSessionId: session.id,
+                    paymentIntentId: typeof session.payment_intent === 'string'
+                        ? session.payment_intent
+                        : session.payment_intent?.id ?? null,
+                },
+            })
+
+            return { url: session.url }
         })
-
-        // Step 3: Save Stripe session ID
-        await this.prisma.order.update({
-            where: { id: order.id },
-            data: {
-                paymentSessionId: session.id,
-                paymentIntentId: typeof session.payment_intent === 'string'
-                    ? session.payment_intent
-                    : session.payment_intent?.id ?? null,
-            },
-        })
-
-        return { url: session.url }
     }
 
     async refundOrder(orderId: number) {
@@ -144,5 +145,23 @@ export class PaymentService {
 
         console.log('✅ Payment Success:', session.id);
         console.log(`✅ Order ${orderId} marked as PAID and cart cleared.`);
+    }
+
+    async handleFailedOrCanceledPayment(session: any) {
+        const orderId = session.metadata?.orderId;
+        if (!orderId) {
+            console.log('⚠️ No orderId found in session metadata.');
+            return;
+        }
+
+        await this.prisma.order.update({
+            where: { id: Number(orderId) },
+            data: {
+                paymentStatus: 'FAILED',  // mark payment as failed
+                orderStatus: 'CANCELLED', // optionally cancel the order
+            },
+        });
+
+        console.log(`⚠️ Payment for Order ${orderId} failed or canceled.`);
     }
 }

@@ -26,6 +26,8 @@ export class PaymentController {
         const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
         let event: Stripe.Event;
 
+        console.log("Webhook running ....")
+
         try {
             if (!req.rawBody) {
                 throw new Error('Missing raw body for Stripe webhook.');
@@ -41,9 +43,20 @@ export class PaymentController {
             return { recieved: false };
         }
 
+        console.log("EVENT From the webhook::", event.type)
+
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object as Stripe.Checkout.Session;
+            console.log("Success Payment")
             await this.paymentService.handleSuccessfulPayment(session);
+        } else if (event.type === 'checkout.session.expired') {
+            const session = event.data.object as Stripe.Checkout.Session;
+            console.log("Success Expired")
+            await this.paymentService.handleFailedOrCanceledPayment(session);
+        } else if (event.type === 'payment_intent.payment_failed') {
+            const paymentIntent = event.data.object as Stripe.PaymentIntent;
+            console.log("Failed Payment")
+            await this.paymentService.handleFailedOrCanceledPayment(paymentIntent);
         }
 
         return { received: true };
