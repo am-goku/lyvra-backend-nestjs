@@ -11,6 +11,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { OrdersModule } from './orders/orders.module';
 import { CartModule } from './cart/cart.module';
 import { CheckoutModule } from './checkout/checkout.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { CheckoutModule } from './checkout/checkout.module';
     CategoriesModule,
     OrdersModule,
     CartModule,
-    CheckoutModule
+    CheckoutModule,
+    PaymentModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,7 +5,7 @@ import { AuthGuard } from '@nestjs/passport';
 @Controller('checkout')
 @UseGuards(AuthGuard('jwt'))
 export class CheckoutController {
-    constructor(private readonly checkoutService: CheckoutService) { };
+    constructor(private readonly checkoutService: CheckoutService) {};
 
     @Post()
     checkout(@Req() req) {
