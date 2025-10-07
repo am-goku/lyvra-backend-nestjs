@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, ParseIntPipe, Post, Req, UseGuards } from
 import { OrdersService } from './orders.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { CancelOrderDto } from './dto/cancel-order.dto';
 
 @Controller('orders')
 @UseGuards(AuthGuard('jwt'))
@@ -11,6 +12,11 @@ export class OrdersController {
     @Post()
     create(@Body() dto: CreateOrderDto, @Req() req) {
         return this.ordersService.create(dto, req.user.userId);
+    }
+
+    @Post('cancel')
+    cancelOrder(@Body() dto: CancelOrderDto, @Req() req) {
+        return this.ordersService.cancelOrder(dto.orderId, req.user.userId);
     }
 
     @Get()

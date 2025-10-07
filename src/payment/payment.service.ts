@@ -71,10 +71,44 @@ export class PaymentService {
         // Step 3: Save Stripe session ID
         await this.prisma.order.update({
             where: { id: order.id },
-            data: { paymentSessionId: session.id },
+            data: {
+                paymentSessionId: session.id,
+                paymentIntentId: typeof session.payment_intent === 'string'
+                    ? session.payment_intent
+                    : session.payment_intent?.id ?? null,
+            },
         })
 
         return { url: session.url }
+    }
+
+    async refundOrder(orderId: number) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+
+        if (!order) throw new BadRequestException('Order not found');
+        if (order.paymentMethod === 'COD')
+            throw new BadRequestException('COD order cannot be refunded');
+        if (order.paymentStatus !== 'PAID')
+            throw new BadRequestException('Payment not completed');
+
+        if (!order.paymentSessionId)
+            throw new BadRequestException('No Stripe session found for this order');
+
+        // Starting prisma transaction for refund
+        return await this.prisma.$transaction(async (prisma) => {
+            // Creating stripe refund
+            const refund = await this.stripe.refunds.create({
+                payment_intent: order.paymentIntentId as string, // Passing the payment intent (payment session ID)
+            });
+
+            console.log("STRIPE REFUND RESPONSE", refund);
+
+            // Updating order status
+            await prisma.order.update({
+                where: { id: orderId },
+                data: { paymentStatus: "REFUNDED", orderStatus: 'CANCELLED' }
+            })
+        })
     }
 
     constructEvent(rawBody: Buffer, sig: string, secret: string) {

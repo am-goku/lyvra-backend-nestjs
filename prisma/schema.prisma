@@ -55,6 +55,7 @@ model Order {
   orderStatus      OrderStatus   @default(PENDING)
   paymentStatus    PaymentStatus @default(PENDING)
   paymentSessionId String?       @unique
+  paymentIntentId  String?       // ✅ optional Stripe PaymentIntent ID
   paymentMethod    PaymentMethod @default(STRIPE)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt

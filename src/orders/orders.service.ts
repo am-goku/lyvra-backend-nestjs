@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from 'prisma/prisma.service';
+import { PaymentService } from 'src/payment/payment.service';
 
 @Injectable()
 export class OrdersService {
-    constructor(private prisma: PrismaService) { };
+    constructor(
+        private prisma: PrismaService,
+        private readonly paymentService: PaymentService,
+    ) { };
 
     async create(dto: CreateOrderDto, userId: number) {
         const productIds = dto.items.map(i => i.productId);
@@ -39,6 +43,33 @@ export class OrdersService {
                 orderItems: { include: { product: true } }
             }
         })
+    }
+
+    async cancelOrder(orderId: number, userId: number) {
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+            include: { orderItems: true }
+        });
+
+        if (!order) throw new NotFoundException('Order not found');
+        if (order.userId !== userId) throw new BadRequestException('Unauthorized');
+        if (['CANCELLED', 'DELIVERED'].includes(order.orderStatus)) {
+            throw new BadRequestException('Cannot cancel this order');
+        }
+
+        // For online payments, we can mark as REFUNDED
+        if (order.paymentMethod !== 'COD' && order.paymentStatus === 'PAID') {
+            return this.paymentService.refundOrder(orderId);
+        }
+
+        return this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+                orderStatus: 'CANCELLED',
+            },
+        });
+
+        // TODO: restore cart items to the order items (optional)
     }
 
     findAll(userId: number) {
