@@ -7,7 +7,7 @@ import express from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-    // Keep raw body for Stripe webhook verification
+  // Keep raw body for Stripe webhook verification
   app.use(
     '/payment/webhook',
     express.raw({ type: 'application/json' }),

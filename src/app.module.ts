@@ -12,6 +12,7 @@ import { OrdersModule } from './orders/orders.module';
 import { CartModule } from './cart/cart.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { PaymentModule } from './payment/payment.module';
+import { EmailModule } from './mail/email.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { PaymentModule } from './payment/payment.module';
     OrdersModule,
     CartModule,
     CheckoutModule,
-    PaymentModule
+    PaymentModule,
+    EmailModule
   ],
   controllers: [AppController],
   providers: [AppService],

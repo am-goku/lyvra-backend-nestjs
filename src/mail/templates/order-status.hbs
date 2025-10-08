@@ -1,0 +1,8 @@
+<p>Hi {{ order.user.email }},</p>
+<p>Your order <strong>#{{ order.id }}</strong> status is <strong>{{ order.orderStatus }}</strong>.</p>
+<ul>
+  {{#each order.orderItems}}
+    <li>{{ this.product.name }} × {{ this.quantity }} — ${{ this.price }}</li>
+  {{/each}}
+</ul>
+<p>Total: ${{ order.total }}</p>
