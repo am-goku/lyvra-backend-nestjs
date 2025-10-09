@@ -10,6 +10,7 @@ datasource db {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
+  name      String?
   password  String
   role      Role     @default(USER)
   createdAt DateTime @default(now())
@@ -55,7 +56,7 @@ model Order {
   orderStatus      OrderStatus   @default(PENDING)
   paymentStatus    PaymentStatus @default(PENDING)
   paymentSessionId String?       @unique
-  paymentIntentId  String?       // ✅ optional Stripe PaymentIntent ID
+  paymentIntentId  String? // ✅ optional Stripe PaymentIntent ID
   paymentMethod    PaymentMethod @default(COD)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt

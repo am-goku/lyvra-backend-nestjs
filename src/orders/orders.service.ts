@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { PaymentService } from 'src/payment/payment.service';
+import { AdminGetOrdersDto, OrderStatusDto } from './dto/admin-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -84,5 +85,67 @@ export class OrdersService {
             where: { id, userId },
             include: { orderItems: { include: { product: true } } },
         });
+    }
+
+    // Order Service for Admin
+    async getAllOrders(query: AdminGetOrdersDto) {
+        const { status, userId, page = 1, limit = 10 } = query;
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+        if (status) where.orderStatus = status;
+        if (userId) where.userId = userId;
+
+        const [orders, total] = await Promise.all([
+            this.prisma.order.findMany({
+                where,
+                include: {
+                    user: { select: { id: true, name: true, email: true } },
+                    orderItems: { include: { product: true } },
+                },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+            }),
+            this.prisma.order.count({ where }),
+        ]);
+
+        return {
+            data: orders,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
+    }
+
+    getOrderById(id: number) {
+        return this.prisma.order.findUnique({
+            where: { id },
+            include: {
+                user: { select: { id: true, email: true } },
+                orderItems: { include: { product: true } }
+            }
+        })
+    }
+
+    updateOrderStatus(
+        id: number,
+        dto: OrderStatusDto
+    ) {
+        return this.prisma.order.update({
+            where: { id },
+            data: { orderStatus: dto.status }
+        })
+    }
+
+    async deleteOrder(id: number) {
+        await this.prisma.orderItem.deleteMany({
+            where: { orderId: id }
+        });
+
+        return this.prisma.order.delete({ where: { id } })
     }
 }
