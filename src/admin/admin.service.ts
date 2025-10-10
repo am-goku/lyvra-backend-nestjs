@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { format, subDays, subMonths, subYears } from 'date-fns';
+import { format, parseISO, subDays, subMonths, subYears } from 'date-fns';
 
 @Injectable()
 export class AdminService {
@@ -23,26 +23,31 @@ export class AdminService {
         }
     }
 
-    async getSalesAnalytics(range: "daily" | "monthly" | "yearly" = "monthly") {
+    async getSalesAnalytics(
+        range: "daily" | "monthly" | "yearly" = "monthly",
+        startDate?: string,
+        endDate?: string
+    ) {
         const now = new Date();
-        let startDate: Date;
+        let start: Date;
+        let end: Date = endDate ? parseISO(endDate) : now;
         let groupBy: "day" | "month" | "year";
 
-        if (range === 'daily') {
-            startDate = subDays(now, 7)
-            groupBy = 'day'
-        } else if (range === 'yearly') {
-            startDate = subMonths(now, 6);
-            groupBy = "month";
+        if (startDate) {
+            start = parseISO(startDate);
         } else {
-            startDate = subYears(now, 1);
-            groupBy = "year";
+            // default ranges
+            if (range === "daily") start = subDays(now, 7);
+            else if (range === "monthly") start = subMonths(now, 6);
+            else start = subYears(now, 1);
         }
+
+        groupBy = range === "daily" ? "day" : range === "monthly" ? "month" : "year";
 
         const orders = await this.prisma.order.findMany({
             where: {
                 paymentStatus: 'PAID',
-                createdAt: { gte: startDate }
+                createdAt: { gte: start, lte: end }
             },
             select: {
                 total: true,
@@ -68,7 +73,12 @@ export class AdminService {
         return Object.entries(grouped).map(([label, total]) => ({ label, total }));
     }
 
-    async getTopProducts() {
+    async getTopProducts(startDate?: string, endDate?: string) {
+        const where: any = {};
+
+        if (startDate) where.createdAt = { gte: parseISO(startDate) };
+        if (endDate) where.createdAt = { lte: parseISO(endDate) };
+
         const products = await this.prisma.orderItem.groupBy({
             by: ["productId"],
             _sum: { quantity: true },
@@ -77,25 +87,31 @@ export class AdminService {
             take: 5
         });
 
-        const details = await Promise.all(products.map(async (p) => {
-            const product = await this.prisma.product.findUnique({
-                where: { id: p.productId },
-                select: { name: true, price: true }
-            });
+        const details = await Promise.all(
+            products.map(async (p) => {
+                const product = await this.prisma.product.findUnique({
+                    where: { id: p.productId },
+                    select: { name: true, price: true }
+                });
 
-            return {
-                ...product,
-                quantitySold: p._sum.quantity,
-                totalOrders: p._count.productId
-            }
-        }));
+                return {
+                    ...product,
+                    quantitySold: p._sum.quantity,
+                    totalOrders: p._count.productId
+                }
+            }));
 
         return details;
     }
 
-    async getUserStats() {
-        const total = await this.prisma.user.count();
-        const active = await this.prisma.user.count({ where: { isActive: true } })
+    async getUserStats(startDate?: string, endDate?: string) {
+        const where: any = {};
+
+        if (startDate) where.createdAt = { gte: parseISO(startDate) };
+        if (endDate) where.createdAt = { ...where.createdAt, lte: parseISO(endDate) }
+
+        const total = await this.prisma.user.count({ where });
+        const active = await this.prisma.user.count({ where: { ...where, isActive: true } })
 
         const lastMonth = subMonths(new Date(), 1);
         const newUsersLastMonth = await this.prisma.user.count({

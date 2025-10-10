@@ -17,17 +17,27 @@ export class AdminController {
     }
 
     @Get("sales")
-    getSales(@Query("range") range: "daily" | "monthly" | "yearly" = "monthly") {
-        return this.adminService.getSalesAnalytics(range);
+    getSales(
+        @Query("range") range: "daily" | "monthly" | "yearly" = "monthly",
+        @Query("startDate") startDate?: string,
+        @Query("endDate") endDate?: string
+    ) {
+        return this.adminService.getSalesAnalytics(range, startDate, endDate);
     }
 
     @Get("top-products")
-    getTopProducts() {
-        return this.adminService.getTopProducts();
+    getTopProducts(
+        @Query("startDate") startDate?: string,
+        @Query("endDate") endDate?: string
+    ) {
+        return this.adminService.getTopProducts(startDate, endDate);
     }
 
     @Get("user-stats")
-    getUserStats() {
-        return this.adminService.getUserStats();
+    getUserStats(
+        @Query("startDate") startDate?: string,
+        @Query("endDate") endDate?: string
+    ) {
+        return this.adminService.getUserStats(startDate, endDate);
     }
 }
