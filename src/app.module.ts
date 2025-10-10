@@ -13,6 +13,7 @@ import { CartModule } from './cart/cart.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { PaymentModule } from './payment/payment.module';
 import { EmailModule } from './mail/email.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { EmailModule } from './mail/email.module';
     CartModule,
     CheckoutModule,
     PaymentModule,
-    EmailModule
+    EmailModule,
+    AdminModule
   ],
   controllers: [AppController],
   providers: [AppService],
