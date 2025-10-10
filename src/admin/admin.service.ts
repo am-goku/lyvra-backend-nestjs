@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { format, parseISO, subDays, subMonths, subYears } from 'date-fns';
+import { format, parseISO, subDays, subMonths, subWeeks, subYears } from 'date-fns';
 
 @Injectable()
 export class AdminService {
@@ -124,5 +124,60 @@ export class AdminService {
             newUsersLastMonth,
             activePercentage: ((active / total) * 100).toFixed(2)
         }
+    }
+
+    async getOrderTrends(
+        range: "daily" | "weekly" | "monthly" = "monthly",
+        startDate?: string,
+        endDate?: string
+    ) {
+        const now = new Date();
+        const start = startDate ? parseISO(startDate) :
+            range === 'daily' ? subDays(now, 30) :
+                range === 'weekly' ? subWeeks(now, 12) :
+                    subMonths(now, 6);
+
+        const end = endDate ? parseISO(endDate) : now;
+
+        // Fetching order in the date range
+        const orders = await this.prisma.order.findMany({
+            where: { createdAt: { gte: start, lte: end } },
+            select: { total: true, createdAt: true },
+            orderBy: { createdAt: 'asc' }
+        });
+
+        // Grouping orders
+        const grouped: Record<string, { orders: number; revenue: number }> = {};
+
+        for (const o of orders) {
+            let key: string;
+            if (range === 'daily') key = format(o.createdAt, "yyyy-MM-dd");
+            else if (range === 'weekly') key = format(o.createdAt, "yyyy-'W'II"); // ISO Week
+            else key = format(o.createdAt, "yyyy-MM"); // Monthly
+
+            if (!grouped[key]) grouped[key] = { orders: 0, revenue: 0 };
+            grouped[key].orders += 1;
+            grouped[key].revenue += o.total;
+        }
+
+        // Converting to array with growth %
+        const labels = Object.keys(grouped).sort();
+        const result = labels.map((label, i) => {
+            const current = grouped[label];
+            const prev = i > 0 ? grouped[label[i - 1]] : null;
+            const growthOrders = prev ? ((current.orders - prev.orders) / prev.orders) * 100 : null;
+            const growthRevenue = prev ? ((current.revenue - prev.revenue) / prev.revenue) * 100 : null;
+
+            return {
+                period: label,
+                orders: current.orders,
+                revenue: current.revenue,
+                growthOrders: growthOrders !== null ? +growthOrders.toFixed(2) : null,
+                growthRevenue: growthRevenue !== null ? +growthRevenue.toFixed(2) : null
+            }
+        });
+
+        return result;
+
     }
 }

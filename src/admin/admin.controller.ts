@@ -4,6 +4,7 @@ import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { AdminService } from './admin.service';
 import { Role } from '@prisma/client';
+import { GetOrderTrendsDto } from './dto/get-order-trends.dto';
 
 @Controller('admin')
 @Roles(Role.ADMIN)
@@ -39,5 +40,11 @@ export class AdminController {
         @Query("endDate") endDate?: string
     ) {
         return this.adminService.getUserStats(startDate, endDate);
+    }
+
+    @Get("order-trend")
+    getOrderTrend(@Query() query: GetOrderTrendsDto) {
+        const { range, startDate, endDate } = query;
+        return this.adminService.getOrderTrends(range, startDate, endDate);
     }
 }

@@ -86,15 +86,26 @@ export class OrdersService {
             include: { orderItems: { include: { product: true } } },
         });
     }
+    
+}
 
-    // Order Service for Admin
+@Injectable()
+export class AdminOrderService {
+    constructor(private readonly prisma: PrismaService) {};
+
     async getAllOrders(query: AdminGetOrdersDto) {
-        const { status, userId, page = 1, limit = 10 } = query;
+        const { status, userId, paymentMethod, startDate, endDate, page = 1, limit = 10 } = query;
         const skip = (page - 1) * limit;
 
         const where: any = {};
         if (status) where.orderStatus = status;
         if (userId) where.userId = userId;
+        if (paymentMethod) where.paymentMethod = paymentMethod;
+        if(startDate || endDate) {
+            where.createdAt = {};
+            if(startDate) where.createdAt.gte = new Date(startDate);
+            if(endDate) where.createdAt.lte = new Date(endDate);
+        }
 
         const [orders, total] = await Promise.all([
             this.prisma.order.findMany({
@@ -149,3 +160,4 @@ export class OrdersService {
         return this.prisma.order.delete({ where: { id } })
     }
 }
+
