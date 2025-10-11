@@ -13,6 +13,11 @@ async function bootstrap() {
     express.raw({ type: 'application/json' }),
   );
 
+  app.enableCors({
+    origin: process.env.FRONTEND_URL,
+    methods: 'GET, POST, PUT, PATCH, DELETE, HEAD',
+  })
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // Strip properties that do not have any decorators
