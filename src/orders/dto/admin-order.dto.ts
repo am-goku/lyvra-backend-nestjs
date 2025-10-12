@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentStatus } from "@prisma/client";
+import { OrderStatus, PaymentMethod } from "@prisma/client";
 import { Type } from "class-transformer";
 import { IsDateString, IsEnum, IsInt, IsOptional, IsString, Min } from "class-validator";
 
@@ -17,8 +17,8 @@ export class AdminGetOrdersDto {
   userId?: string;
 
   @IsOptional()
-  @IsEnum(PaymentStatus)
-  paymentMethod?: PaymentStatus;
+  @IsEnum(PaymentMethod)
+  paymentMethod?: PaymentMethod;
 
   @IsOptional()
   @IsDateString()
