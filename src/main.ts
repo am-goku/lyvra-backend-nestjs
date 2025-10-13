@@ -15,6 +15,7 @@ async function bootstrap() {
     express.raw({ type: 'application/json' }),
   );
 
+  // Cross origin resourse sharing config
   app.enableCors({
     origin: process.env.FRONTEND_URL,
     methods: 'GET, POST, PUT, PATCH, DELETE, HEAD',
