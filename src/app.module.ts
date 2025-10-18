@@ -14,6 +14,7 @@ import { CheckoutModule } from './checkout/checkout.module';
 import { PaymentModule } from './payment/payment.module';
 import { EmailModule } from './mail/email.module';
 import { AdminModule } from './admin/admin.module';
+import { WishlistModule } from './wishlist/wishlist.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { AdminModule } from './admin/admin.module';
     CheckoutModule,
     PaymentModule,
     EmailModule,
-    AdminModule
+    AdminModule,
+    WishlistModule
   ],
   controllers: [AppController],
   providers: [AppService],
