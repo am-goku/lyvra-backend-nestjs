@@ -1,10 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { format, parseISO, subDays, subMonths, subWeeks, subYears } from 'date-fns';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class AdminService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private redis: RedisService,
+    ) { }
+
+    // Functions to create cache keys
+    private makeSalesAnalyticsCacheKey(range: string, start?: string, end?: string) {
+        return `sales-analytics:${range}:${start || 'auto'}:${end || 'auto'}`;
+    }
+    private makeTopProductsCacheKey(end?: string, start?: string) {
+        if (!end) return null;
+        return `top-products:${start || 'auto'}:${end}`
+    }
 
     async getOverview() {
         const [users, orders, revenue] = await Promise.all([
@@ -28,6 +41,11 @@ export class AdminService {
         startDate?: string,
         endDate?: string
     ) {
+        //Creating redis cache key
+        const cacheKey = this.makeSalesAnalyticsCacheKey(range, startDate, endDate);
+        const cached = await this.redis.get(cacheKey);
+        if (cached) return cached;
+
         const now = new Date();
         let start: Date;
         let end: Date = endDate ? parseISO(endDate) : now;
@@ -70,10 +88,22 @@ export class AdminService {
             grouped[key] = (grouped[key] || 0) + o.total
         }
 
-        return Object.entries(grouped).map(([label, total]) => ({ label, total }));
+        const result = Object.entries(grouped).map(([label, total]) => ({ label, total }));
+
+        // Cache result for 10 minutes (600 seconds) — adjust TTL as needed
+        await this.redis.set(cacheKey, result, 600);
+
+        return result;
     }
 
     async getTopProducts(startDate?: string, endDate?: string) {
+
+        const cacheKey = this.makeTopProductsCacheKey(endDate, startDate);
+        if (endDate && cacheKey) {
+            const cached = await this.redis.get(cacheKey);
+            if (cached) return cached;
+        }
+
         const where: any = {};
 
         if (startDate) where.createdAt = { gte: parseISO(startDate) };
@@ -100,6 +130,10 @@ export class AdminService {
                     totalOrders: p._count.productId
                 }
             }));
+
+        if (endDate && cacheKey) {
+            await this.redis.set(cacheKey, details, 600);
+        }
 
         return details;
     }

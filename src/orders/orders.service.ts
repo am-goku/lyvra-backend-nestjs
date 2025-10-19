@@ -91,7 +91,9 @@ export class OrdersService {
 
 @Injectable()
 export class AdminOrderService {
-    constructor(private readonly prisma: PrismaService) {};
+    constructor(
+        private readonly prisma: PrismaService,
+    ) {};
 
     async getAllOrders(query: AdminGetOrdersDto) {
         const { status, userId, paymentMethod, startDate, endDate, page = 1, limit = 10 } = query;

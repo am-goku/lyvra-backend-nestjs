@@ -15,6 +15,7 @@ import { PaymentModule } from './payment/payment.module';
 import { EmailModule } from './mail/email.module';
 import { AdminModule } from './admin/admin.module';
 import { WishlistModule } from './wishlist/wishlist.module';
+import { RedisModule } from "./redis/redis.module";
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { WishlistModule } from './wishlist/wishlist.module';
     PaymentModule,
     EmailModule,
     AdminModule,
-    WishlistModule
+    WishlistModule,
+    RedisModule
   ],
   controllers: [AppController],
   providers: [AppService],
