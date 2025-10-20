@@ -16,6 +16,7 @@ import { EmailModule } from './mail/email.module';
 import { AdminModule } from './admin/admin.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { RedisModule } from "./redis/redis.module";
+import { OtpModule } from "./otp/otp.module";
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { RedisModule } from "./redis/redis.module";
     EmailModule,
     AdminModule,
     WishlistModule,
-    RedisModule
+    RedisModule,
+    OtpModule
   ],
   controllers: [AppController],
   providers: [AppService],

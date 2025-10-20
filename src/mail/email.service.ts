@@ -18,6 +18,18 @@ export class EmailService {
         })
     }
 
+    async sendOtpEmail(email: string, otp: string) {
+        await this.mailService.sendMail({
+            to: email,
+            subject: 'Lyvra - One Time Password',
+            template: 'user-otp',
+            context: {
+                otp: otp,
+                year: new Date().getFullYear()
+            }
+        })
+    }
+
     async sendOrderNotification(email: string, orderData: any) {
         await this.mailService.sendMail({
             to: email,
