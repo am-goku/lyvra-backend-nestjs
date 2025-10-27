@@ -7,6 +7,25 @@ import { UpdateCartDto } from './dto/update-cart.dto';
 export class CartService {
     constructor(private prisma: PrismaService) { };
 
+    private async updateCartTotal(cartId: number) {
+        const items = await this.prisma.cartItem.findMany({
+            where: { cartId },
+            select: { priceSnapshot: true, quantity: true },
+        });
+
+        if (items.length < 1) return;
+
+        const total = items.reduce(
+            (sum, item) => sum + Number(item.priceSnapshot) * item.quantity,
+            0
+        );
+
+        await this.prisma.cart.update({
+            where: { id: cartId },
+            data: { total },
+        });
+    }
+
     async getUserCart(userId: number) {
         const cart = await this.prisma.cart.findUnique({
             where: { userId },
@@ -24,24 +43,34 @@ export class CartService {
     async addToCart(dto: AddToCartDto, userId: number) {
         const cart = await this.getUserCart(userId);
 
+        // Get product info (for price snapshot)
+        const product = await this.prisma.product.findUnique({
+            where: { id: dto.productId },
+            select: { price: true },
+        });
+
+        if (!product) throw new NotFoundException('Product not found');
+
         const existingItem = await this.prisma.cartItem.findFirst({
             where: { cartId: cart.id, productId: dto.productId }
         });
 
         if (existingItem) {
-            return this.prisma.cartItem.update({
-                where: { id: existingItem.id },
-                data: { quantity: existingItem.quantity + dto.quantity }
-            });
+            return this.addQuantity({ itemId: existingItem.id, productId: dto.productId }, userId);
         }
 
-        return this.prisma.cartItem.create({
+        const cartItem = await this.prisma.cartItem.create({
             data: {
                 cartId: cart.id,
                 productId: dto.productId,
-                quantity: dto.quantity
+                quantity: dto.quantity,
+                priceSnapshot: product.price,
             }
         });
+
+        await this.updateCartTotal(cart.id);
+
+        return cartItem;
     }
 
     async addQuantity({ itemId, productId }: UpdateCartDto, userId: number) {
@@ -53,6 +82,8 @@ export class CartService {
             where: { cartId: cart.id, id: itemId, productId },
             data: { quantity: { increment: 1 } }
         });
+
+        await this.updateCartTotal(cart.id);
 
         return cartItem;
     }
@@ -76,6 +107,8 @@ export class CartService {
             data: { quantity: { decrement: 1 } },
         });
 
+        await this.updateCartTotal(cart.id);
+
         return updatedItem;
     }
 
@@ -90,12 +123,15 @@ export class CartService {
 
         await this.prisma.cartItem.delete({ where: { id: item.id } });
 
+        await this.updateCartTotal(cart.id);
+
         return this.getUserCart(userId);
     }
 
     async clearCart(userId: number) {
         const cart = await this.getUserCart(userId);
         await this.prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+        await this.updateCartTotal(cart.id);
         return this.getUserCart(userId);
     }
 }
