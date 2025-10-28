@@ -1,0 +1,22 @@
+model Product {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  createdBy   Int
+  user        User        @relation(fields: [createdBy], references: [id])
+  categories  Category[]  @relation("ProductCategories")
+  OrderItem   OrderItem[]
+  CartItem    CartItem[]
+
+  wishlists Wishlist[] @relation("WishlistProducts")
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[] @relation("ProductCategories")
+}

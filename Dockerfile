@@ -29,9 +29,12 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm install --omit=dev
 
+# Copy Prisma client files
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY .env .env
 
 # Expose port

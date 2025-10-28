@@ -1,0 +1,9 @@
+model Wishlist {
+  id     Int       @id @default(autoincrement())
+  userId Int       @unique
+  user   User      @relation(fields: [userId], references: [id])
+  items  Product[] @relation("WishlistProducts")
+}
+
+// A Wishlist is uniquely associated with a User (one-to-one).
+// It contains multiple Products (many-to-many relationship).

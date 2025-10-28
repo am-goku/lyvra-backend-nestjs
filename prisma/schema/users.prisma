@@ -1,0 +1,22 @@
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Product Product[]
+
+  Order Order[]
+  Cart  Cart?
+
+  Wishlist Wishlist[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
