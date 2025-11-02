@@ -11,7 +11,7 @@ export class CategoriesController {
     constructor(private readonly categoriesService: CategoriesService) { };
 
     @Post()
-    @UseGuards(AuthGuard, RolesGuard)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.ADMIN)
     create(@Body() dto: CreateCategoryDto) {
         return this.categoriesService.create(dto)
@@ -28,7 +28,7 @@ export class CategoriesController {
     }
 
     @Delete(':id')
-    @UseGuards(AuthGuard, RolesGuard)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.ADMIN)
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.categoriesService.remove(id);

@@ -17,7 +17,7 @@ export class ProductsController {
     ) { }
 
     @Post()
-    @UseGuards(AuthGuard, RolesGuard)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.ADMIN)
     @UseInterceptors(FileInterceptor('image'))
     async create(
