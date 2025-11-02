@@ -7,16 +7,18 @@ import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Role } from '@prisma/client';
 
 @Controller('products')
 export class ProductsController {
     constructor(
         private readonly productsService: ProductsService,
         private readonly cloudinaryService: CloudinaryService
-    ) {}
+    ) { }
 
     @Post()
-    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(Role.ADMIN)
     @UseInterceptors(FileInterceptor('image'))
     async create(
         @UploadedFile() file: Express.Multer.File,
@@ -25,12 +27,12 @@ export class ProductsController {
     ) {
         let imageUrl: string | undefined;
 
-        if(file) {
+        if (file) {
             const uploaded = await this.cloudinaryService.uploadImage(file);
             imageUrl = uploaded.secure_url;
         }
 
-        return this.productsService.create({...dto, imageUrl}, req.user.userId);
+        return this.productsService.create({ ...dto, imageUrl }, req.user.userId);
     }
 
     @Get()
@@ -40,20 +42,20 @@ export class ProductsController {
     }
 
     @Get(':id')
-    findOne(@Param('id', ParseIntPipe) id:number) {
+    findOne(@Param('id', ParseIntPipe) id: number) {
         return this.productsService.findOne(id);
     }
 
     @Put(':id')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles('ADMIN')
-    update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto){
+    @Roles(Role.ADMIN)
+    update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
         return this.productsService.update(id, dto);
     }
 
     @Delete(':id')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles('ADMIN')
+    @Roles(Role.ADMIN)
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.productsService.remove(id);
     }
