@@ -1,14 +1,19 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray, IsInt } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString()
   name: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   description?: string;
 
-  @IsBoolean()
   @IsOptional()
+  @IsBoolean()
   active?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  productIds?: number[];
 }
