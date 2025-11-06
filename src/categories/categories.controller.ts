@@ -17,7 +17,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { FindAllCategoriesDto } from './dto/fetch-category.dto';
+import { FetchAllCategoryResponse } from 'src/models/response';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -37,11 +39,8 @@ export class CategoriesController {
     @ApiOperation({
         summary: 'Get all categories (supports pagination & search)',
     })
-    findAll(
-        @Query('skip') skip?: number,
-        @Query('take') take?: number,
-        @Query('search') search?: string,
-    ) {
+    @ApiResponse(FetchAllCategoryResponse)
+    findAll(@Query() { skip, take, search }: FindAllCategoriesDto) {
         return this.categoriesService.findAll({
             skip: skip ? +skip : 0,
             take: take ? +take : 20,

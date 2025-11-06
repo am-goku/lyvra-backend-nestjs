@@ -10,11 +10,11 @@ export class PaymentController {
     constructor(private readonly paymentService: PaymentService) { };
 
     // ✅ Protected route for checkout creation
-    @Post('checkout-session')
-    @UseGuards(AuthGuard('jwt'))
-    async createCheckout(@Req() req) {
-        return this.paymentService.createCheckoutSession(req.user.userId);
-    }
+    // @Post('checkout-session')
+    // @UseGuards(AuthGuard('jwt'))
+    // async createCheckout(@Req() req) {
+    //     return this.paymentService.createCheckoutSession(req.user.userId);
+    // }
 
     // ⚠️ Stripe webhook must NOT be guarded
     // Stripe itself posts here, not the user

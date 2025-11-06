@@ -31,11 +31,15 @@ import {
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
-    constructor(private readonly productsService: ProductsService) { }
+    constructor(
+        private readonly productsService: ProductsService,
+        private readonly cloudinaryService: CloudinaryService
+    ) { }
 
     @Post()
     @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -70,16 +74,14 @@ export class ProductsController {
         @Body() dto: CreateProductDto,
         @Req() req,
     ) {
-        let imageUrls: string[] = [];
+        let imageData: { url: string, asset_id: string, public_id: string }[] = [];
 
         if (files && files.length) {
             // 🧪 Mock Cloudinary upload (replace later)
-            imageUrls = files.map(
-                (file, idx) => `https://mock.cloudinary.com/product_${Date.now()}_${idx}.jpg`,
-            );
+            imageData = await this.cloudinaryService.uploadImages(files)
         }
 
-        return this.productsService.create({ ...dto, imageUrls }, req.user.userId);
+        return this.productsService.create({ ...dto, imageData }, req.user.userId);
     }
 
     @Get()

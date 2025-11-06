@@ -14,9 +14,40 @@ model User {
   Cart  Cart?
 
   Wishlist Wishlist[]
+
+  Address Address[]
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+// ADDRESS SCHEMA
+model Address {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  fullName   String
+  phone      String
+  house      String
+  landmark   String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+
+  isDefault   Boolean     @default(false)
+  addressType AddressType @default(SHIPPING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Order Order[] @relation("OrderAddress")
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
 }

@@ -1,63 +1,104 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
-import { AdminOrderService, OrdersService } from './orders.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { OrdersService, AdminOrderService } from './orders.service';
 import { AuthGuard } from '@nestjs/passport';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { CancelOrderDto } from './dto/cancel-order.dto';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
-import { AdminGetOrdersDto, OrderStatusDto } from './dto/admin-order.dto';
 import { Role } from '@prisma/client';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { OrderStatusDto, AdminGetOrdersDto } from './dto/admin-order.dto';
 
+@ApiTags('Orders')
+@ApiBearerAuth()
 @Controller('orders')
-@Roles(Role.USER)
 @UseGuards(AuthGuard('jwt'))
 export class OrdersController {
-    constructor(private readonly ordersService: OrdersService) { };
+  constructor(private readonly ordersService: OrdersService) {}
 
-    @Post()
-    create(@Body() dto: CreateOrderDto, @Req() req) {
-        return this.ordersService.create(dto, req.user.userId);
-    }
+  @Post()
+  @ApiOperation({ summary: 'Create a new order after checkout confirmation' })
+  @ApiResponse({ status: 201, description: 'Order created successfully' })
+  create(@Req() req, @Body() dto: CreateOrderDto) {
+    return this.ordersService.create(dto, req.user.userId);
+  }
 
-    @Post('cancel')
-    cancelOrder(@Body() dto: CancelOrderDto, @Req() req) {
-        return this.ordersService.cancelOrder(dto.orderId, req.user.userId);
-    }
+  @Get()
+  @ApiOperation({ summary: 'Get all orders for the logged-in user' })
+  @ApiResponse({ status: 200, description: 'List of user orders' })
+  findAll(@Req() req) {
+    return this.ordersService.findAll(req.user.userId);
+  }
 
-    @Get()
-    findAll(@Req() req) {
-        return this.ordersService.findAll(req.user.userId);
-    }
+  @Get(':id')
+  @ApiOperation({ summary: 'Get details of a specific order' })
+  @ApiResponse({ status: 200, description: 'Order details' })
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.ordersService.findOne(id, req.user.userId);
+  }
 
-    @Get(':id')
-    findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
-        return this.ordersService.findOne(id, req.user.userId);
-    }
+  @Put(':id/cancel')
+  @ApiOperation({ summary: 'Cancel an active order (if eligible)' })
+  @ApiResponse({ status: 200, description: 'Order cancelled successfully' })
+  cancelOrder(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.ordersService.cancelOrder(id, req.user.userId);
+  }
 }
 
+@ApiTags('Admin Orders')
+@ApiBearerAuth()
 @Controller('admin/orders')
-@Roles(Role.ADMIN)
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-export class AdminOrderController {
-    constructor(private readonly orderService: AdminOrderService) { };
+@Roles(Role.ADMIN)
+export class AdminOrdersController {
+  constructor(private readonly adminOrderService: AdminOrderService) {}
 
-    @Get()
-    getAllOrders(@Query() query: AdminGetOrdersDto) {
-        return this.orderService.getAllOrders(query);
-    }
+  @Get()
+  @ApiOperation({
+    summary: 'Admin: Get all orders (supports filters, pagination, etc.)',
+  })
+  @ApiResponse({ status: 200, description: 'List of all orders with metadata' })
+  getAll(@Query() query: AdminGetOrdersDto) {
+    return this.adminOrderService.getAllOrders(query);
+  }
 
-    @Get(':id')
-    getOrderById(@Param('id', ParseIntPipe) id: number) {
-        return this.orderService.getOrderById(id);
-    }
+  @Get(':id')
+  @ApiOperation({ summary: 'Admin: Get details of a specific order' })
+  @ApiResponse({ status: 200, description: 'Order details' })
+  getOne(@Param('id', ParseIntPipe) id: number) {
+    return this.adminOrderService.getOrderById(id);
+  }
 
-    @Patch(':id/status')
-    updateOrderStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: OrderStatusDto) {
-        return this.orderService.updateOrderStatus(id, dto);
-    }
+  @Put(':id/status')
+  @ApiOperation({ summary: 'Admin: Update order status' })
+  @ApiResponse({ status: 200, description: 'Order status updated successfully' })
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: OrderStatusDto,
+  ) {
+    return this.adminOrderService.updateOrderStatus(id, dto);
+  }
 
-    @Delete(':id')
-    deleteOrder(@Param('id', ParseIntPipe) id: number) {
-        return this.orderService.deleteOrder(id)
-    }
+  @Delete(':id')
+  @ApiOperation({ summary: 'Admin: Delete an order and its items' })
+  @ApiResponse({ status: 200, description: 'Order deleted successfully' })
+  deleteOrder(@Param('id', ParseIntPipe) id: number) {
+    return this.adminOrderService.deleteOrder(id);
+  }
 }

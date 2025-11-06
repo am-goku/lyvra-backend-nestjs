@@ -1,5 +1,20 @@
 import { Transform, Type } from 'class-transformer';
-import { IsString, IsNumber, Min, IsOptional, IsArray, IsUrl } from 'class-validator';
+import { IsString, IsNumber, Min, IsOptional, IsArray, IsUrl, IsNotEmpty, ValidateNested } from 'class-validator';
+
+// Nested DTO for each image object in the imageData array
+export class ImageDataDto {
+  @IsUrl({}, { message: 'URL must be a valid URL' })
+  @IsNotEmpty({ message: 'URL cannot be empty' })
+  url: string;
+
+  @IsString({ message: 'Asset ID must be a string' })
+  @IsNotEmpty({ message: 'Asset ID cannot be empty' })
+  asset_id: string;
+
+  @IsString({ message: 'Public ID must be a string' })
+  @IsNotEmpty({ message: 'Public ID cannot be empty' })
+  public_id: string;
+}
 
 export class CreateProductDto {
   @IsString()
@@ -15,9 +30,10 @@ export class CreateProductDto {
   price: number;
 
   @IsOptional()
-  @IsArray()
-  @IsUrl({}, { each: true })
-  imageUrls?: string[];
+  @IsArray({ message: 'imageData must be an array' })
+  @ValidateNested({ each: true })
+  @Type(() => ImageDataDto)
+  imageData?: ImageDataDto[];
 
   @IsOptional()
   @IsArray()

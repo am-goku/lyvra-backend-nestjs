@@ -5,7 +5,7 @@ import { PrismaService } from 'prisma/prisma.service';
 export class CheckoutService {
     constructor(private prisma: PrismaService) { };
 
-    async checkout(userId: number) {
+    async getCheckout(userId: number) {
         const cart = await this.prisma.cart.findUnique({
             where: { userId },
             include: { items: { include: { product: true } } }
@@ -15,31 +15,25 @@ export class CheckoutService {
             throw new BadRequestException('Cart is empty');
         }
 
-        const total = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+        const cartTotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+        const tax_amt = 0;  // Dummy data
+        const delivery_chrg = 0; // Dummy data
+        const currency = 'USD'; // Dummy data
 
-        const order = await this.prisma.order.create({
-            data: {
-                userId,
-                total,
-                orderStatus: "PROCESSING", // Directly pushing to process the order
-                paymentStatus: "PENDING", // Checkout service for cash-on-delivery (by default pending)
-                paymentMethod: "COD", // Service for cash-on-delivery (by default COD)
-                orderItems: {
-                    create: cart.items.map((item) => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        price: item.product.price
-                    }))
-                }
+        const address = await this.prisma.address.findFirst({ where: { userId: userId, isDefault: true } })
+
+        const order_details = {
+            items: cart.items,
+            amount: {
+                cartTotal,
+                tax_amt,
+                delivery_chrg,
+                currency
             },
-            include: {
-                orderItems: { include: { product: true } }
-            }
-        })
+            total_amt: cartTotal + tax_amt + delivery_chrg,
+            address
+        }
 
-        // Clearing cart after checkout
-        await this.prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
-
-        return order
+        return order_details
     }
 }

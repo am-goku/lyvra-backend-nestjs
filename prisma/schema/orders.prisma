@@ -1,16 +1,23 @@
 model Order {
-  id               Int           @id @default(autoincrement())
-  userId           Int
-  user             User          @relation(fields: [userId], references: [id])
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  // Address
+  addressId Int
+  address   Address @relation("OrderAddress", fields: [addressId], references: [id]) // 👈 only this side
+
   total            Float
   orderStatus      OrderStatus   @default(PENDING)
   paymentStatus    PaymentStatus @default(PENDING)
   paymentSessionId String?       @unique
   paymentIntentId  String? // ✅ optional Stripe PaymentIntent ID
   paymentMethod    PaymentMethod @default(COD)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  orderItems       OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
 }
 
 model OrderItem {

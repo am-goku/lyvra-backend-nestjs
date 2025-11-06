@@ -5,22 +5,24 @@ import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(dto: CreateProductDto, userId: number) {
-    const { categoryIds, imageUrls, ...rest } = dto;
+    const { categoryIds, imageData, ...rest } = dto;
 
     return this.prisma.product.create({
       data: {
         ...rest,
         createdBy: userId,
-        categories: categoryIds
-          ? { connect: categoryIds.map((id) => ({ id })) }
-          : undefined,
-        images: imageUrls
+        categories: categoryIds ? { connect: categoryIds.map((id) => ({ id })) } : undefined,
+        images: imageData
           ? {
-              create: imageUrls.map((url) => ({ url })),
-            }
+            create: imageData.map((image) => ({
+              url: image.url,
+              public_id: image.public_id,
+              asset_id: image.asset_id,
+            })),
+          }
           : undefined,
       },
       include: {
@@ -35,8 +37,8 @@ export class ProductsService {
     return this.prisma.product.findMany({
       where: categoryIds?.length
         ? {
-            categories: { some: { id: { in: categoryIds } } },
-          }
+          categories: { some: { id: { in: categoryIds } } },
+        }
         : undefined,
       include: {
         categories: true,
@@ -58,7 +60,7 @@ export class ProductsService {
   }
 
   update(id: number, dto: UpdateProductDto) {
-    const { categoryIds, imageUrls, ...rest } = dto;
+    const { categoryIds, imageData, ...rest } = dto;
 
     return this.prisma.product.update({
       where: { id },
@@ -67,11 +69,14 @@ export class ProductsService {
         categories: categoryIds
           ? { set: categoryIds.map((id) => ({ id })) }
           : undefined,
-        images: imageUrls
+        images: imageData
           ? {
-              deleteMany: {},
-              create: imageUrls.map((url) => ({ url })),
-            }
+            create: imageData.map((image) => ({
+              url: image.url,
+              public_id: image.public_id,
+              asset_id: image.asset_id,
+            })),
+          }
           : undefined,
       },
       include: {
