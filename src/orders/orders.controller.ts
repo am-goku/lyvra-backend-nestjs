@@ -22,7 +22,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
-import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatusDto, AdminGetOrdersDto } from './dto/admin-order.dto';
 
 @ApiTags('Orders')
@@ -31,13 +30,6 @@ import { OrderStatusDto, AdminGetOrdersDto } from './dto/admin-order.dto';
 @UseGuards(AuthGuard('jwt'))
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
-
-  @Post()
-  @ApiOperation({ summary: 'Create a new order after checkout confirmation' })
-  @ApiResponse({ status: 201, description: 'Order created successfully' })
-  create(@Req() req, @Body() dto: CreateOrderDto) {
-    return this.ordersService.create(dto, req.user.userId);
-  }
 
   @Get()
   @ApiOperation({ summary: 'Get all orders for the logged-in user' })

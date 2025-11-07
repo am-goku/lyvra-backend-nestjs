@@ -1,87 +1,73 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'prisma/prisma.service';
-import Stripe from 'stripe';
+import { NewOrderDTO } from './dto/new-order.dto';
+import { StripeService } from 'src/stripe/stripe.service';
 
 @Injectable()
 export class PaymentService {
-    private stripe: Stripe;
-
     constructor(
-        private config: ConfigService,
-        private prisma: PrismaService
-    ) {
-        this.stripe = new Stripe(this.config.get<string>('STRIPE_SECRET_KEY') as string, {
-            apiVersion: '2025-09-30.clover' //TODO: Need to chane it to the latest
+        private stripeService: StripeService,
+        private prisma: PrismaService,
+    ) { };
+
+    async createCheckoutSession(dto: NewOrderDTO, userId: number) {
+
+        const cart = await this.prisma.cart.findUnique({
+            where: { userId },
+            include: { items: { include: { product: true } } },
         });
-    };
 
-    // async createCheckoutSession(userId: number) {
-    //     const cart = await this.prisma.cart.findUnique({
-    //         where: { userId },
-    //         include: { items: { include: { product: true } } }
-    //     });
+        if (!cart || cart.items.length === 0)
+            throw new BadRequestException('Cart is empty');
 
-    //     if (!cart || cart.items.length === 0)
-    //         throw new BadRequestException('Cart is empty.');
+        const address = await this.prisma.address.findUnique({ where: { id: dto.addressId, userId: userId } });
 
-    //     // Calculating total amount
-    //     const total = cart.items.reduce((sum, item) => sum = sum + (item.product.price * item.quantity), 0)
+        if (!address)
+            throw new BadRequestException('No address found');
 
-    //     return await this.prisma.$transaction(async (txn) => {
-    //         // Step 1: Create a pending order
-    //         const order = await txn.order.create({
-    //             data: {
-    //                 userId,
-    //                 total,
-    //                 orderStatus: 'PENDING',
-    //                 paymentStatus: 'PENDING',
-    //                 paymentMethod: 'STRIPE',
-    //                 orderItems: {
-    //                     create: cart.items.map((item) => ({
-    //                         productId: item.productId,
-    //                         quantity: item.quantity,
-    //                         price: item.product.price,
-    //                     })),
-    //                 },
-    //             },
-    //         });
+        const cartTotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+        const taxAmount = 0; //TODO: Need to chcange the value accordingly
+        const devliveryCharge = 0; //TODO: Need to chcange the value accordingly
 
-    //         const lineItems = cart.items.map((item) => ({
-    //             price_data: {
-    //                 currency: 'usd',
-    //                 product_data: { name: item.product.name },
-    //                 unit_amount: Math.round(item.product.price * 100), // Stripe uses cents(or by 100)
-    //             },
-    //             quantity: item.quantity
-    //         }));
+        const total = cartTotal + taxAmount + devliveryCharge;
 
-    //         const session = await this.stripe.checkout.sessions.create({
-    //             payment_method_types: ['card'],
-    //             mode: 'payment',
-    //             line_items: lineItems,
-    //             metadata: {
-    //                 orderId: order.id.toString(),
-    //                 userId: userId.toString()
-    //             },
-    //             success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-    //             cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
-    //         })
+        return await this.prisma.$transaction(async (txn) => {
+            // Step 1: Create a pending order
+            const order = await txn.order.create({
+                data: {
+                    userId,
+                    addressId: dto.addressId,
+                    total,
+                    orderStatus: 'PENDING',
+                    paymentStatus: 'PENDING',
+                    paymentMethod: dto.paymentMethod,
+                    orderItems: {
+                        create: cart.items.map((item) => ({
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            price: item.product.price,
+                        })),
+                    },
+                },
+            });
 
-    //         // Step 3: Save Stripe session ID
-    //         await txn.order.update({
-    //             where: { id: order.id },
-    //             data: {
-    //                 paymentSessionId: session.id,
-    //                 paymentIntentId: typeof session.payment_intent === 'string'
-    //                     ? session.payment_intent
-    //                     : session.payment_intent?.id ?? null,
-    //             },
-    //         })
+            //Creating new stripe session if payment method is 'STRIPE'
+            const session = await this.stripeService.newCheckoutSession(userId, order.id, cart)
 
-    //         return { url: session.url }
-    //     })
-    // }
+            // Step 3: Save Stripe session ID
+            await txn.order.update({
+                where: { id: order.id },
+                data: {
+                    paymentSessionId: session.id,
+                    paymentIntentId: typeof session.payment_intent === 'string'
+                        ? session.payment_intent
+                        : session.payment_intent?.id ?? null,
+                },
+            })
+
+            return { url: session.url }
+        })
+    }
 
     async refundOrder(orderId: number) {
         const order = await this.prisma.order.findUnique({ where: { id: orderId } });
@@ -98,9 +84,7 @@ export class PaymentService {
         // Starting prisma transaction for refund
         return await this.prisma.$transaction(async (prisma) => {
             // Creating stripe refund
-            const refund = await this.stripe.refunds.create({
-                payment_intent: order.paymentIntentId as string, // Passing the payment intent (payment session ID)
-            });
+            const refund = await this.stripeService.initiateRefund(order.paymentIntentId as string)
 
             console.log("STRIPE REFUND RESPONSE", refund);
 
@@ -113,7 +97,7 @@ export class PaymentService {
     }
 
     constructEvent(rawBody: Buffer, sig: string, secret: string) {
-        return this.stripe.webhooks.constructEvent(rawBody, sig, secret);
+        return this.stripeService.constructEvent(rawBody, sig, secret)
     }
 
     async handleSuccessfulPayment(session: any) {

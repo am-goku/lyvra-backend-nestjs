@@ -33,6 +33,7 @@ import { OtpModule } from "./otp/otp.module";
     CartModule,
     CheckoutModule,
     PaymentModule,
+    
     EmailModule,
     AdminModule,
     WishlistModule,

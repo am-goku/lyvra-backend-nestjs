@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { PaymentService } from 'src/payment/payment.service';
-import { CreateOrderDto } from './dto/create-order.dto';
 import { AdminGetOrdersDto, OrderStatusDto } from './dto/admin-order.dto';
 import { OrderStatus, PaymentMethod } from '@prisma/client';
 
@@ -18,7 +17,7 @@ export class OrdersService {
     ) { }
 
     /** 🛒 Checkout directly from user cart */
-    async checkoutFromCart(userId: number, addressId: number, paymentMethod: PaymentMethod = 'COD') {
+    async createOrder(userId: number, addressId: number, paymentMethod: PaymentMethod = 'COD') {
 
         const cart = await this.prisma.cart.findUnique({
             where: { userId },
@@ -28,7 +27,11 @@ export class OrdersService {
         if (!cart || cart.items.length === 0)
             throw new BadRequestException('Cart is empty');
 
-        const total = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+        const cartTotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+        const taxAmount = 0; //TODO: Need to chcange the value accordingly
+        const devliveryCharge = 0; //TODO: Need to chcange the value accordingly
+
+        const total = cartTotal + taxAmount + devliveryCharge;
 
         return this.prisma.$transaction(async (tx) => {
             const order = await tx.order.create({
@@ -58,39 +61,6 @@ export class OrdersService {
             await tx.cart.update({ where: { id: cart.id }, data: { total: 0 } });
 
             return order;
-        });
-    }
-
-    /** 💳 Direct order creation (bypasses cart) */
-    async create(dto: CreateOrderDto, userId: number) {
-        const productIds = dto.items.map((i) => i.productId);
-        const products = await this.prisma.product.findMany({
-            where: { id: { in: productIds } },
-        });
-
-        if (productIds.length !== products.length)
-            throw new NotFoundException('Some products not found');
-
-        const total = dto.items.reduce((sum, item) => {
-            const product = products.find((p) => p.id === item.productId);
-            return sum + (product?.price ?? 0) * item.quantity;
-        }, 0);
-
-        return this.prisma.order.create({
-            data: {
-                userId,
-                addressId: dto.addressId,
-                total,
-                paymentMethod: dto.paymentMethod ?? 'COD',
-                orderItems: {
-                    create: dto.items.map((item) => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        price: products.find((p) => p.id === item.productId)?.price ?? 0,
-                    })),
-                },
-            },
-            include: { orderItems: { include: { product: true } } },
         });
     }
 
