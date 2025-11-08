@@ -1,11 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private readonly cloudinary: CloudinaryService
+  ) { }
 
   async create(dto: CreateProductDto, userId: number) {
     const { categoryIds, imageData, ...rest } = dto;
@@ -14,7 +18,7 @@ export class ProductsService {
       data: {
         ...rest,
         createdBy: userId,
-        categories: categoryIds ? { connect: categoryIds.map((id) => ({ id })) } : undefined,
+        categories: categoryIds?.length ? { connect: categoryIds.map((id) => ({ id })) } : undefined,
         images: imageData
           ? {
             create: imageData.map((image) => ({
@@ -43,7 +47,6 @@ export class ProductsService {
       include: {
         categories: true,
         images: true,
-        user: { select: { id: true, email: true } },
       },
     });
   }
@@ -54,7 +57,6 @@ export class ProductsService {
       include: {
         categories: true,
         images: true,
-        user: { select: { id: true, email: true } },
       },
     });
   }
@@ -87,7 +89,26 @@ export class ProductsService {
     });
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    const isExist = await this.prisma.product.count({where: {id}})
+    if (!isExist) throw new BadRequestException('No product found on the provided ID');
+
+    await this.removeProductImages(id)
     return this.prisma.product.delete({ where: { id } });
   }
+
+
+
+  private async removeProductImages(productId: number): Promise<any> {
+    const productImages = await this.prisma.productImage.findMany({ where: { productId }, select: { public_id: true } });
+
+    const public_ids = productImages.map(pI => pI.public_id);
+
+    const response = await this.cloudinary.deleteImages(public_ids);
+
+    if (!response) throw Error("Error deleting image.");
+
+    return this.prisma.productImage.deleteMany({ where: { productId } })
+  }
+
 }

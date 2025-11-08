@@ -32,6 +32,22 @@ export class CloudinaryService {
         });
     }
 
+    async deleteImage(public_id: string) {
+        return this.removeFromCloudinary(public_id);
+    }
+
+    async deleteImages(public_ids: string[]) {
+        try {
+            const deletePromises = public_ids.map((id) => this.removeFromCloudinary(id));
+
+            const response = await Promise.all(deletePromises);
+
+            return true
+        } catch (error) {
+            return false
+        }
+    }
+
     // Private helper to avoid code duplication
     private uploadToCloudinary(file: Express.Multer.File): Promise<UploadApiResponse> {
         return new Promise((resolve, reject) => {
@@ -48,5 +64,16 @@ export class CloudinaryService {
 
             uploadStream.end(file.buffer);
         });
+    }
+
+    private removeFromCloudinary(public_id: string) {
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                const result = await cloudinary.uploader.destroy(public_id);
+                resolve(result)
+            } catch (error) {
+                reject(error)
+            }
+        })
     }
 }

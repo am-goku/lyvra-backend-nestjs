@@ -77,7 +77,6 @@ export class ProductsController {
         let imageData: { url: string, asset_id: string, public_id: string }[] = [];
 
         if (files && files.length) {
-            // 🧪 Mock Cloudinary upload (replace later)
             imageData = await this.cloudinaryService.uploadImages(files)
         }
 
@@ -96,6 +95,7 @@ export class ProductsController {
     @ApiResponse({ status: 200, description: 'List of products returned successfully' })
     findAll(@Query('categoryIds') categoryIds: string) {
         const ids = categoryIds ? categoryIds.split(',').map((id) => +id) : undefined;
+        console.log(categoryIds, ids)
         return this.productsService.findAll(ids);
     }
 

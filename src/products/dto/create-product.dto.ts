@@ -35,7 +35,6 @@ export class CreateProductDto {
   @Type(() => ImageDataDto)
   imageData?: ImageDataDto[];
 
-  @IsOptional()
   @IsArray()
   @Transform(({ value }) => {
     if (!value) return undefined;
