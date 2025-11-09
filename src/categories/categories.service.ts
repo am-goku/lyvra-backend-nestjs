@@ -6,19 +6,36 @@ import {
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { UploadApiResponse } from 'cloudinary';
 
 @Injectable()
 export class CategoriesService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private readonly cloudinary: CloudinaryService
+    ) { }
 
     /** ─────────────────────────────
      *  Create category (optionally link products)
      *  ───────────────────────────── */
-    async create(dto: CreateCategoryDto) {
+    async create(dto: CreateCategoryDto, file?: Express.Multer.File) {
         const exists = await this.prisma.category.findUnique({
             where: { name: dto.name },
         });
         if (exists) throw new ConflictException('Category name already exists');
+
+        let imageRes: UploadApiResponse | undefined = undefined;
+        let imageData: { asset_id: string, public_id: string, url: string } | undefined;
+
+        if (file) {
+            imageRes = await this.cloudinary.uploadImage(file);
+            imageData = {
+                asset_id: imageRes.asset_id,
+                public_id: imageRes.public_id,
+                url: imageRes.url
+            }
+        }
 
         return this.prisma.category.create({
             data: {
@@ -30,6 +47,8 @@ export class CategoriesService {
                         connect: dto.productIds.map((id) => ({ id })),
                     }
                     : undefined,
+
+                ...(imageData && { image: { create: imageData } }),
             },
             include: { products: true },
         });

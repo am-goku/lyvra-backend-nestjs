@@ -8,6 +8,7 @@ import {
     Patch,
     Post,
     Query,
+    UploadedFiles,
     UseGuards,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
@@ -31,8 +32,11 @@ export class CategoriesController {
     @ApiOperation({ summary: 'Create a new category (Admin only)' })
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.ADMIN)
-    create(@Body() dto: CreateCategoryDto) {
-        return this.categoriesService.create(dto);
+    create(
+        @Body() dto: CreateCategoryDto,
+        @UploadedFiles() file: Express.Multer.File
+    ) {
+        return this.categoriesService.create(dto, file);
     }
 
     @Get()

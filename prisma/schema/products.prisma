@@ -35,4 +35,16 @@ model Category {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime? // for soft delete
   products    Product[] @relation("ProductCategories")
+
+  image CategoryImage?
+}
+
+model CategoryImage {
+  id         Int      @id @default(autoincrement())
+  url        String
+  public_id  String
+  asset_id   String
+  categoryId Int      @unique
+  category   Category @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime @default(now())
 }
