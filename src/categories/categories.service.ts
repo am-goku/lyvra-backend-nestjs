@@ -67,7 +67,7 @@ export class CategoriesService {
             skip,
             take,
             orderBy: { createdAt: 'desc' },
-            include: { products: true },
+            include: { products: true, image: true },
         });
     }
 
@@ -77,7 +77,7 @@ export class CategoriesService {
     async findOne(id: number) {
         const category = await this.prisma.category.findUnique({
             where: { id },
-            include: { products: true },
+            include: { products: true, image: true },
         });
         if (!category || category.deletedAt)
             throw new NotFoundException('Category not found');
@@ -126,6 +126,11 @@ export class CategoriesService {
                 where: { id },
                 data: { deletedAt: new Date(), active: false },
             });
+        }
+
+        if (category.image) {
+            await this.cloudinary.deleteImage(category.image.public_id);
+            await this.prisma.categoryImage.delete({ where: { id: category.image.id } });
         }
 
         // Hard delete (rarely used)
