@@ -6,8 +6,10 @@ export class RedisService {
     private client: Redis;
 
     onModuleInit() {
-        const url = process.env.REDIS_URL || 'redis://localhost:6379';
-        this.client = new Redis(url);
+        const host = process.env.REDIS_HOST || 'redis';
+        const port = Number(process.env.REDIS_PORT) || 6379;
+
+        this.client = new Redis({ host, port });
         this.client.on('error', (err) => console.log(err));
     }
 

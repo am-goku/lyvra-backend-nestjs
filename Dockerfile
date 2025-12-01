@@ -9,9 +9,6 @@ RUN npm install
 # Copy source code & Prisma schema
 COPY . .
 
-# Copy .env for Prisma client generation
-COPY .env .env
-
 # Generate Prisma client (needs DATABASE_URL)
 RUN npx prisma generate
 
@@ -35,7 +32,6 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
-COPY .env .env
 
 # Expose port
 EXPOSE 3000

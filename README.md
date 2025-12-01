@@ -1,123 +1,148 @@
-# Lyvra Backend (NestJS)
+## 📘 Lyvra Backend (NestJS)
 
-Welcome to the **Lyvra Backend**, a scalable and secure server-side application built with **NestJS**. This project handles authentication, database interactions, and core API functionality for the Lyvra application.
+Welcome to the **Lyvra Backend**, a scalable and secure server-side application built with **NestJS**. This backend powers core functionality including authentication, payments, user management, and media operations for the Lyvra platform.
 
 ---
 
 ## 🛠️ Technologies & Tools
 
-* **NestJS** - A progressive Node.js framework for building efficient and scalable server-side applications.
-* **Prisma** - Next-generation ORM for seamless database management.
-* **Passport & JWT** - Authentication middleware with token-based authentication.
-* **TypeScript** - Strongly typed JavaScript for better developer experience.
-* **ESLint & Prettier** - Ensures code quality and consistent formatting.
+* **NestJS** — Modular and scalable Node.js framework
+* **Prisma** — Modern ORM with schema-based DB workflows
+* **Passport + JWT** — Secure authentication
+* **Redis** — Session caching & token blacklist handling
+* **TypeScript** — Strong typing & better dev experience
+* **ESLint + Prettier** — Clean and consistent code
 
 ---
 
 ## 🚀 Features
 
-* Modular architecture for maintainable code.
-* JWT-based authentication system.
-* Prisma ORM for database operations.
-* Configurable via environment variables.
-* Ready for production deployment.
+* JWT authentication system
+* Prisma-driven database operations
+* Cloudinary support for media
+* Stripe payment integration
+* Environment-based configuration
+* Production-ready Docker setup
 
 ---
 
-## 📦 Installation
+## ⚙️ Configuration (Environment Variables)
 
-Clone the repository and install dependencies:
-
-```bash
-git clone https://github.com/am-goku/lyvra-backend-nestjs.git
-cd lyvra-backend-nestjs
-npm install
-```
-
----
-
-## ⚙️ Configuration
-
-Create a `.env` file in the root directory and add the following environment variables:
+Create a `.env` file (or pass using `docker compose --env-file`) with:
 
 ```env
 # Server
 PORT=3000
 
-# Database
-DATABASE_URL=your-database-connection-string
+# PostgreSQL Cloud URI
+DATABASE_URL="postgresql://user:password@host:port/dbname?schema=public"
 
-# JWT
-JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=1d
+# JWT Secrets
+JWT_SECRET="your-secret-key"
+JWT_EXPIRES_IN="1d"
+
+# Cloudinary Secrets
+CLOUDINARY_CLOUD_NAME="xyz"
+CLOUDINARY_API_KEY="12345"
+CLOUDINARY_API_SECRET="abcdef"
+
+# Stripe Configuration
+STRIPE_SECRET_KEY="sk_live_xxx"
+STRIPE_PUBLISHABLE_KEY="pk_live_xxx"
+STRIPE_WEBHOOK_SECRET="whsec_xxx"
+
+# SMTP Email Config
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_FROM="YourApp <noreply@yourapp.com>"
+SMTP_USER="example@gmail.com"
+SMTP_PASS="password"
+
+# Redis Config
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# App URLs
+FRONTEND_URL=http://localhost:4200
 ```
 
-> Replace placeholders with your actual configuration values.
+> Replace placeholders with real credentials before deploying.
 
 ---
 
-## 🧪 Running the Application
+## 🐳 Docker Setup (Redis + Backend)
 
-### Development Mode (Hot Reloading)
+This project supports Docker for easier local & production deployment.
+
+### 📌 Start all services
 
 ```bash
+docker compose up --build -d
+```
+
+This will:
+
+✔ Build the NestJS backend
+✔ Start Redis automatically
+✔ Inject environment variables from `.env`
+
+Check logs:
+
+```bash
+docker compose logs -f app
+```
+
+Stop services:
+
+```bash
+docker compose down
+```
+
+---
+
+## 🧪 Local Development (Non-Docker)
+
+```bash
+npm install
 npm run start:dev
 ```
 
-### Production Mode
+For production build:
 
 ```bash
 npm run build
-npm run start:prod
+npm run start
 ```
 
-The backend will be available at `http://localhost:3000` (or your configured PORT).
+App available at →
+➡ `http://localhost:3000`
 
 ---
 
-## 🔑 Authentication
+## 🔐 Authentication
 
-* **JWT** authentication using Passport strategies.
-* Endpoints for registration, login, and token validation.
-* Modular Auth system for easy extension.
+* JWT protected routes
+* Refresh token support
+* Email/password login and signup
+* Token invalidation using Redis
 
 ---
 
 ## 🧪 Testing
 
-Run unit and e2e tests using Jest:
-
 ```bash
 npm run test       # Unit tests
-npm run test:e2e   # End-to-end tests
-npm run test:cov   # Test coverage
+npm run test:e2e   # e2e tests
+npm run test:cov   # Coverage report
 ```
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## 💡 Notes
-
-* Ensure the database is running before starting the application.
-* Configure your `.env` properly for JWT and database connections.
-* This backend is ready to connect with your frontend application or mobile app.
-
----
-
-## 📂 Project Structure (Optional)
-
-```
-src/
-├── auth/           # Authentication module
-├── prisma/         # Prisma module & client
-├── users/          # User module
-├── main.ts         # App entry point
-```
+Licensed under the **MIT License**.
+See the `LICENSE` file for details.
 
 ---
 
