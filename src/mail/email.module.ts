@@ -20,7 +20,7 @@ import { join } from 'path';
         from: `"Lyvra" <${process.env.SMTP_FROM}>`,
       },
       template: {
-        dir: join(process.cwd(), 'src/mail/templates'),
+        dir: join(process.cwd(), 'assets', 'templates'),
         adapter: new HandlebarsAdapter(),
         options: { strict: true }
       }
