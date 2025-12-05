@@ -46,10 +46,6 @@ export class UsersService {
         return this.prisma.user.findUnique({ where: { id } });
     }
 
-    create(data: { email: string; password: string }) {
-        return this.prisma.user.create({ data });
-    }
-
     update(id: number, data: { email?: string; password?: string }) {
         return this.prisma.user.update({
             where: { id },
