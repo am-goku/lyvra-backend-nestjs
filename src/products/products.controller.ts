@@ -49,10 +49,15 @@ export class ProductsController {
     }
 
     @Get()
-    findAll(@Query('categoryIds') categoryIds: string) {
+    findAll(
+        @Query('categoryIds') categoryIds: string,
+        @Query('page') page: string = '1', // ✅ Added pagination
+        @Query('limit') limit: string = '20', // ✅ Added pagination
+    ) {
         const ids = categoryIds ? categoryIds.split(',').map((id) => +id) : undefined;
-        console.log(categoryIds, ids)
-        return this.productsService.findAll(ids);
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 20;
+        return this.productsService.findAll(ids, pageNum, limitNum);
     }
 
     @Get(':id')

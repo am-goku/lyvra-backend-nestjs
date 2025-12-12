@@ -1,7 +1,7 @@
 model Cart {
   id        Int        @id @default(autoincrement())
   userId    Int        @unique
-  user      User       @relation(fields: [userId], references: [id])
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade) // ✅ Delete cart when user is deleted
   items     CartItem[]
   total     Decimal    @default(0.00) // 👈 total price of all items
   createdAt DateTime   @default(now())
@@ -14,6 +14,14 @@ model CartItem {
   productId     Int
   quantity      Int     @default(1)
   priceSnapshot Decimal @default(0.00) // ← snapshot price when added
-  cart          Cart    @relation(fields: [cartId], references: [id])
-  product       Product @relation(fields: [productId], references: [id])
+  cart          Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade) // ✅ Delete items when cart is deleted
+  product       Product @relation(fields: [productId], references: [id], onDelete: Restrict) // ✅ Prevent product deletion if in carts
+
+  createdAt DateTime @default(now()) // ✅ Added timestamp
+  updatedAt DateTime @updatedAt // ✅ Added timestamp
+
+  // ✅ CRITICAL: Prevent duplicate products in same cart
+  @@unique([cartId, productId])
+  @@index([cartId]) // ✅ Index for faster cart lookups
+  @@index([productId]) // ✅ Index for product-based queries
 }

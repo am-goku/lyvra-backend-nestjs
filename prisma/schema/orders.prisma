@@ -1,11 +1,11 @@
 model Order {
   id     Int  @id @default(autoincrement())
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Restrict) // ✅ Prevent user deletion if they have orders
 
   // Address
   addressId Int
-  address   Address @relation("OrderAddress", fields: [addressId], references: [id]) // 👈 only this side
+  address   Address @relation("OrderAddress", fields: [addressId], references: [id], onDelete: Restrict) // ✅ Prevent address deletion if used in orders
 
   total            Float
   orderStatus      OrderStatus   @default(PENDING)
@@ -18,6 +18,12 @@ model Order {
   updatedAt DateTime @updatedAt
 
   orderItems OrderItem[]
+
+  // ✅ Added indexes for better query performance
+  @@index([userId])
+  @@index([orderStatus])
+  @@index([paymentStatus])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -26,8 +32,13 @@ model OrderItem {
   productId Int
   quantity  Int     @default(1)
   price     Float
-  order     Order   @relation(fields: [orderId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade) // ✅ Delete items when order is deleted
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict) // ✅ Prevent product deletion if in orders
+
+  createdAt DateTime @default(now()) // ✅ Added timestamp
+
+  @@index([orderId]) // ✅ Index for faster order item lookups
+  @@index([productId]) // ✅ Index for product-based queries
 }
 
 enum OrderStatus {

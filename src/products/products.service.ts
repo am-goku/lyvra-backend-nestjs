@@ -37,23 +37,32 @@ export class ProductsService {
     });
   }
 
-  findAll(categoryIds?: number[]) {
+  findAll(categoryIds?: number[], page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit;
+
     return this.prisma.product.findMany({
-      where: categoryIds?.length
-        ? {
-          categories: { some: { id: { in: categoryIds } } },
-        }
-        : undefined,
+      where: {
+        deletedAt: null, // ✅ Only show non-deleted products
+        ...(categoryIds?.length
+          ? { categories: { some: { id: { in: categoryIds } } } }
+          : {}),
+      },
       include: {
         categories: true,
         images: true,
       },
+      skip, // ✅ Added pagination
+      take: limit, // ✅ Added pagination
+      orderBy: { createdAt: 'desc' }, // ✅ Newest first
     });
   }
 
   findOne(id: number) {
-    return this.prisma.product.findUnique({
-      where: { id },
+    return this.prisma.product.findFirst({ // ✅ Changed to findFirst to filter deletedAt
+      where: {
+        id,
+        deletedAt: null // ✅ Only show non-deleted products
+      },
       include: {
         categories: true,
         images: true,
@@ -90,11 +99,14 @@ export class ProductsService {
   }
 
   async remove(id: number) {
-    const isExist = await this.prisma.product.count({where: {id}})
+    const isExist = await this.prisma.product.count({ where: { id, deletedAt: null } }) // ✅ Check if not already deleted
     if (!isExist) throw new BadRequestException('No product found on the provided ID');
 
-    await this.removeProductImages(id)
-    return this.prisma.product.delete({ where: { id } });
+    // ✅ Soft delete instead of hard delete
+    return this.prisma.product.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    });
   }
 
 

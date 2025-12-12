@@ -6,8 +6,9 @@ model Product {
   stock       Int         @default(0)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime? // ✅ Added for soft delete
   createdBy   Int
-  user        User        @relation(fields: [createdBy], references: [id])
+  user        User        @relation(fields: [createdBy], references: [id], onDelete: Restrict)
   categories  Category[]  @relation("ProductCategories")
   OrderItem   OrderItem[]
   CartItem    CartItem[]
@@ -15,6 +16,11 @@ model Product {
   wishlists Wishlist[] @relation("WishlistProducts")
 
   images ProductImage[]
+
+  // ✅ Added indexes for better query performance
+  @@index([createdBy])
+  @@index([deletedAt]) // For filtering out deleted products
+  @@index([createdAt])
 }
 
 model ProductImage {
@@ -23,8 +29,10 @@ model ProductImage {
   public_id String
   asset_id  String
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade) // ✅ Delete images when product is deleted
   createdAt DateTime @default(now())
+
+  @@index([productId]) // ✅ Index for faster product image lookups
 }
 
 model Category {
@@ -38,6 +46,9 @@ model Category {
   products    Product[] @relation("ProductCategories")
 
   image CategoryImage?
+
+  @@index([active]) // ✅ Index for filtering active categories
+  @@index([deletedAt]) // ✅ Index for filtering deleted categories
 }
 
 model CategoryImage {
@@ -46,6 +57,6 @@ model CategoryImage {
   public_id  String
   asset_id   String
   categoryId Int      @unique
-  category   Category @relation(fields: [categoryId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade) // ✅ Delete image when category is deleted
   createdAt  DateTime @default(now())
 }
