@@ -15,11 +15,15 @@ async function bootstrap() {
     express.raw({ type: 'application/json' }),
   );
 
-  // Cross origin resourse sharing config
+  // ✅ Improved CORS configuration
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
-    methods: 'GET, POST, PUT, PATCH, DELETE, HEAD',
-  })
+    origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+    credentials: true, // Allow cookies and authorization headers
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['X-Total-Count'], // Expose custom headers to frontend
+    maxAge: 3600, // Cache preflight requests for 1 hour
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

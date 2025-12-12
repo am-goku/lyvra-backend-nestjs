@@ -17,6 +17,7 @@ import { AdminModule } from './admin/admin.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { RedisModule } from "./redis/redis.module";
 import { OtpModule } from "./otp/otp.module";
+import { HealthModule } from './health/health.module'; // ✅ Added
 
 @Module({
   imports: [
@@ -33,14 +34,15 @@ import { OtpModule } from "./otp/otp.module";
     CartModule,
     CheckoutModule,
     PaymentModule,
-    
+
     EmailModule,
     AdminModule,
     WishlistModule,
     RedisModule,
-    OtpModule
+    OtpModule,
+    HealthModule, // ✅ Added
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
