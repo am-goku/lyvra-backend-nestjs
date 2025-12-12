@@ -5,7 +5,6 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";
 import express from 'express';
-import { setupSwagger } from "./swagger.config";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,9 +28,6 @@ async function bootstrap() {
       transform: true, // Automatically transform payloads to be objects typed according to their DTO classes
     }),
   );
-
-  // Swagger configuration
-  setupSwagger(app);
 
   await app.listen(process.env.PORT ?? 3000);
 }

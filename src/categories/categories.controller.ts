@@ -18,18 +18,14 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from '@prisma/client';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { FindAllCategoriesDto } from './dto/fetch-category.dto';
 import { FetchAllCategoryResponse } from 'src/models/response';
 
-@ApiTags('Categories')
 @Controller('categories')
 export class CategoriesController {
     constructor(private readonly categoriesService: CategoriesService) { }
 
     @Post()
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Create a new category (Admin only)' })
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.ADMIN)
     create(
@@ -40,10 +36,6 @@ export class CategoriesController {
     }
 
     @Get()
-    @ApiOperation({
-        summary: 'Get all categories (supports pagination & search)',
-    })
-    @ApiResponse(FetchAllCategoryResponse)
     findAll(@Query() { skip, take, search }: FindAllCategoriesDto) {
         return this.categoriesService.findAll({
             skip: skip ? +skip : 0,
@@ -53,16 +45,11 @@ export class CategoriesController {
     }
 
     @Get(':id')
-    @ApiOperation({ summary: 'Get category by ID' })
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.categoriesService.findOne(id);
     }
 
     @Patch(':id')
-    @ApiBearerAuth()
-    @ApiOperation({
-        summary: 'Update a category and manage product associations (Admin only)',
-    })
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.ADMIN)
     update(
@@ -73,10 +60,6 @@ export class CategoriesController {
     }
 
     @Delete(':id')
-    @ApiBearerAuth()
-    @ApiOperation({
-        summary: 'Soft delete a category (Admin only)',
-    })
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.ADMIN)
     remove(@Param('id', ParseIntPipe) id: number) {
@@ -84,8 +67,6 @@ export class CategoriesController {
     }
 
     @Get('count/all')
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Count all active categories (Admin only)' })
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.ADMIN)
     count() {

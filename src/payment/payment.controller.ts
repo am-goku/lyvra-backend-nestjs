@@ -5,7 +5,6 @@ import { PaymentService } from './payment.service';
 import { Request } from 'express';
 import Stripe from 'stripe';
 import { NewOrderDTO } from './dto/new-order.dto';
-import { ApiOkResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrdersService } from 'src/orders/orders.service';
 
 @Controller('payment')
@@ -18,19 +17,10 @@ export class PaymentController {
     // ✅ Protected route for checkout creation
     @Post('checkout-session')
     @UseGuards(AuthGuard('jwt'))
-    @ApiOperation({description: "Checking out and Make payment."})
-    @ApiOkResponse({
-        schema: {
-            examples: [
-                { method: 'COD', },
-                { method: 'CARD', url: 'https://stripe.xyziia/bwy6sn/2o99s2hbswn.....' }
-            ]
-        }
-    })
     async createCheckout(@Req() req, @Body() dto: NewOrderDTO) {
-        if(dto.paymentMethod === 'COD')
+        if (dto.paymentMethod === 'COD')
             return this.orderService.createOrder(req.user.userId, dto.addressId, dto.paymentMethod);
-        
+
         return this.paymentService.createCheckoutSession(dto, req.user.userId);
     }
 
