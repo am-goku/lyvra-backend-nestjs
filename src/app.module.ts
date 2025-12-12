@@ -17,7 +17,9 @@ import { AdminModule } from './admin/admin.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { RedisModule } from "./redis/redis.module";
 import { OtpModule } from "./otp/otp.module";
-import { HealthModule } from './health/health.module'; // ✅ Added
+import { HealthModule } from './health/health.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'; // ✅ Added
+import { APP_GUARD } from '@nestjs/core'; // ✅ Added // ✅ Added
 
 @Module({
   imports: [
@@ -25,6 +27,11 @@ import { HealthModule } from './health/health.module'; // ✅ Added
       isGlobal: true, // Makes the configuration available globally
       load: [databaseConfig],
     }),
+    // ✅ Rate limiting: Max 10 requests per 60 seconds per IP
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // Time window: 60 seconds
+      limit: 10, // Max 10 requests per minute
+    }]),
     PrismaModule,
     UsersModule,
     AuthModule,
@@ -43,6 +50,13 @@ import { HealthModule } from './health/health.module'; // ✅ Added
     HealthModule, // ✅ Added
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // ✅ Apply rate limiting globally to all endpoints
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule { }

@@ -65,6 +65,18 @@ export class OrdersService {
                 },
             });
 
+            // ✅ CRITICAL: Decrement stock for each product
+            for (const item of cart.items) {
+                await tx.product.update({
+                    where: { id: item.productId },
+                    data: {
+                        stock: {
+                            decrement: item.quantity,
+                        },
+                    },
+                });
+            }
+
             // Clear cart after successful order
             await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
             await tx.cart.update({ where: { id: cart.id }, data: { total: 0 } });
@@ -86,21 +98,35 @@ export class OrdersService {
         if (order.orderStatus === OrderStatus.CANCELLED || order.orderStatus === OrderStatus.DELIVERED)
             throw new BadRequestException('Cannot cancel this order');
 
-        if (order.paymentMethod !== 'COD' && order.paymentStatus === 'PAID') {
-            // refund via PaymentService
-            await this.paymentService.refundOrder(orderId);
-            return this.prisma.order.update({
-                where: { id: orderId },
-                data: {
-                    orderStatus: 'CANCELLED',
-                    paymentStatus: 'REFUNDED',
-                },
-            });
-        }
+        return this.prisma.$transaction(async (tx) => {
+            // ✅ Restore stock for cancelled order
+            for (const item of order.orderItems) {
+                await tx.product.update({
+                    where: { id: item.productId },
+                    data: {
+                        stock: {
+                            increment: item.quantity, // Return stock
+                        },
+                    },
+                });
+            }
 
-        return this.prisma.order.update({
-            where: { id: orderId },
-            data: { orderStatus: 'CANCELLED' },
+            if (order.paymentMethod !== 'COD' && order.paymentStatus === 'PAID') {
+                // refund via PaymentService
+                await this.paymentService.refundOrder(orderId);
+                return tx.order.update({
+                    where: { id: orderId },
+                    data: {
+                        orderStatus: 'CANCELLED',
+                        paymentStatus: 'REFUNDED',
+                    },
+                });
+            }
+
+            return tx.order.update({
+                where: { id: orderId },
+                data: { orderStatus: 'CANCELLED' },
+            });
         });
     }
 
