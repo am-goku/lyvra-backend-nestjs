@@ -25,11 +25,11 @@ export class PaymentService {
         if (!address)
             throw new BadRequestException('No address found');
 
-        const cartTotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-        const taxAmount = 0; //TODO: Need to chcange the value accordingly
-        const devliveryCharge = 0; //TODO: Need to chcange the value accordingly
+        const cartTotal = cart.items.reduce((sum, item) => sum + Number(item.priceSnapshot) * item.quantity, 0); // ✅ Fixed: Use priceSnapshot
+        const taxAmount = 0; //TODO: Need to change the value accordingly
+        const deliveryCharge = 0; //TODO: Need to change the value accordingly
 
-        const total = cartTotal + taxAmount + devliveryCharge;
+        const total = cartTotal + taxAmount + deliveryCharge;
 
         return await this.prisma.$transaction(async (txn) => {
             // Step 1: Create a pending order

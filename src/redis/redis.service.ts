@@ -6,11 +6,26 @@ export class RedisService {
     private client: Redis;
 
     onModuleInit() {
-        const host = process.env.REDIS_HOST || 'redis';
+        const host = process.env.REDIS_HOST || 'localhost'; // ✅ Default to localhost for local dev
         const port = Number(process.env.REDIS_PORT) || 6379;
 
-        this.client = new Redis({ host, port });
-        this.client.on('error', (err) => console.log(err));
+        this.client = new Redis({
+            host,
+            port,
+            retryStrategy: (times) => {
+                const delay = Math.min(times * 50, 2000);
+                return delay;
+            },
+            maxRetriesPerRequest: 3,
+        });
+
+        this.client.on('error', (err) => {
+            console.error('❌ Redis Connection Error:', err.message);
+        });
+
+        this.client.on('connect', () => {
+            console.log(`✅ Redis connected successfully at ${host}:${port}`);
+        });
     }
 
     async onModuleDestroy() {

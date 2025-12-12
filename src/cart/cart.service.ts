@@ -67,9 +67,14 @@ export class CartService {
         // Ensure product exists & grab price snapshot
         const product = await this.prisma.product.findUnique({
             where: { id: dto.productId },
-            select: { price: true },
+            select: { price: true, stock: true }, // ✅ Added stock to selection
         });
         if (!product) throw new NotFoundException('Product not found');
+
+        // ✅ Added: Stock validation
+        if (product.stock < dto.quantity) {
+            throw new BadRequestException(`Insufficient stock. Only ${product.stock} items available`);
+        }
 
         // Use transaction: get (or create) cart, then upsert item, then recompute total
         return this.prisma.$transaction(async (tx) => {

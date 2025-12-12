@@ -27,11 +27,20 @@ export class OrdersService {
         if (!cart || cart.items.length === 0)
             throw new BadRequestException('Cart is empty');
 
-        const cartTotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-        const taxAmount = 0; //TODO: Need to chcange the value accordingly
-        const devliveryCharge = 0; //TODO: Need to chcange the value accordingly
+        // ✅ Added: Validate stock availability for all items
+        for (const item of cart.items) {
+            if (item.product.stock < item.quantity) {
+                throw new BadRequestException(
+                    `Insufficient stock for "${item.product.name}". Only ${item.product.stock} available, but ${item.quantity} requested`
+                );
+            }
+        }
 
-        const total = cartTotal + taxAmount + devliveryCharge;
+        const cartTotal = cart.items.reduce((sum, item) => sum + Number(item.priceSnapshot) * item.quantity, 0); // ✅ Fixed: Use priceSnapshot
+        const taxAmount = 0; //TODO: Need to change the value accordingly
+        const deliveryCharge = 0; //TODO: Need to change the value accordingly
+
+        const total = cartTotal + taxAmount + deliveryCharge;
 
         return this.prisma.$transaction(async (tx) => {
             const order = await tx.order.create({

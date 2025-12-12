@@ -31,6 +31,12 @@ export class OtpService {
     async verifyOtp(email: string, OTP: string) {
         const key = this.makeOtpCacheKey(email);
         const hashedOtp = await this.redis.get(key);
+
+        // ✅ Fix: Check if OTP exists before comparing
+        if (!hashedOtp) {
+            return false; // OTP expired or doesn't exist
+        }
+
         return await bcrypt.compare(OTP, hashedOtp);
     }
 

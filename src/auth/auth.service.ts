@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { RegisterDto, RegisterOtpDto } from './dto/register.dto';
@@ -12,7 +12,7 @@ import { OtpService } from 'src/otp/otp.service';
 export class AuthService {
     constructor(
         private prisma: PrismaService,
-        private jwtSerice: JwtService,
+        private jwtService: JwtService, // ✅ Fixed typo: jwtSerice -> jwtService
         private otpService: OtpService,
         private mailService: EmailService,
         private redis: RedisService
@@ -36,14 +36,14 @@ export class AuthService {
         return { status: 'OK' }
     }
 
-    async register({email, otp}:RegisterOtpDto) {
+    async register({ email, otp }: RegisterOtpDto) {
         const validOtp = await this.otpService.verifyOtp(email, otp);
-        if (!validOtp) throw new Error('Invalid OTP');
+        if (!validOtp) throw new UnauthorizedException('Invalid or expired OTP'); // ✅ Fixed: Use HTTP exception
 
         const cacheKey = this.makeRegisterCacheKey(email);
         const userData = await this.redis.get(cacheKey);
 
-        if (!userData) throw new Error('Session out. Try again');
+        if (!userData) throw new BadRequestException('Registration session expired. Please try again'); // ✅ Fixed: Use HTTP exception
 
         const user = await this.prisma.user.create({
             data: {
@@ -54,7 +54,7 @@ export class AuthService {
         });
 
         const payload = { sub: user.id, email: user.email, role: user.role };
-        const token = this.jwtSerice.sign(payload);
+        const token = this.jwtService.sign(payload); // ✅ Fixed typo
 
         return { user: { id: user.id, email: user.email, role: user.role }, token };
     }
@@ -64,13 +64,13 @@ export class AuthService {
             where: { email: dto.email }
         });
 
-        if (!user) throw new Error('Invalid credentials');
+        if (!user) throw new UnauthorizedException('Invalid credentials'); // ✅ Fixed: Use HTTP exception
 
         const valid = await bcrypt.compare(dto.password, user.password);
-        if (!valid) throw new Error('Invalid credentials');
+        if (!valid) throw new UnauthorizedException('Invalid credentials'); // ✅ Fixed: Use HTTP exception
 
         const payload = { sub: user.id, email: user.email, role: user.role };
-        const token = this.jwtSerice.sign(payload);
+        const token = this.jwtService.sign(payload); // ✅ Fixed typo
 
         return { user: { id: user.id, email: user.email, role: user.role }, token };
     }
