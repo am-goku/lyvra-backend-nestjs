@@ -1,3 +1,5 @@
+import { APP_CONSTANTS } from 'src/config/constants';
+import Stripe from 'stripe';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { NewOrderDTO } from './dto/new-order.dto';
@@ -26,8 +28,8 @@ export class PaymentService {
             throw new BadRequestException('No address found');
 
         const cartTotal = cart.items.reduce((sum, item) => sum + Number(item.priceSnapshot) * item.quantity, 0); // ✅ Fixed: Use priceSnapshot
-        const taxAmount = 0; //TODO: Need to change the value accordingly
-        const deliveryCharge = 0; //TODO: Need to change the value accordingly
+        const taxAmount = APP_CONSTANTS.TAX_AMOUNT;
+        const deliveryCharge = APP_CONSTANTS.DELIVERY_CHARGE;
 
         const total = cartTotal + taxAmount + deliveryCharge;
 
@@ -100,7 +102,7 @@ export class PaymentService {
         return this.stripeService.constructEvent(rawBody, sig, secret)
     }
 
-    async handleSuccessfulPayment(session: any) {
+    async handleSuccessfulPayment(session: Stripe.Checkout.Session) {
         const orderId = session.metadata?.orderId;
 
         if (!orderId) {
@@ -131,7 +133,7 @@ export class PaymentService {
         console.log(`✅ Order ${orderId} marked as PAID and cart cleared.`);
     }
 
-    async handleFailedOrCanceledPayment(session: any) {
+    async handleFailedOrCanceledPayment(session: Stripe.Checkout.Session) {
         const orderId = session.metadata?.orderId;
         if (!orderId) {
             console.log('⚠️ No orderId found in session metadata.');

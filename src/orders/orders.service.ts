@@ -1,3 +1,4 @@
+import { APP_CONSTANTS } from 'src/config/constants';
 import {
     BadRequestException,
     Injectable,
@@ -7,7 +8,7 @@ import {
 import { PrismaService } from 'prisma/prisma.service';
 import { PaymentService } from 'src/payment/payment.service';
 import { AdminGetOrdersDto, OrderStatusDto } from './dto/admin-order.dto';
-import { OrderStatus, PaymentMethod } from '@prisma/client';
+import { OrderStatus, PaymentMethod, Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -37,8 +38,8 @@ export class OrdersService {
         }
 
         const cartTotal = cart.items.reduce((sum, item) => sum + Number(item.priceSnapshot) * item.quantity, 0); // ✅ Fixed: Use priceSnapshot
-        const taxAmount = 0; //TODO: Need to change the value accordingly
-        const deliveryCharge = 0; //TODO: Need to change the value accordingly
+        const taxAmount = APP_CONSTANTS.TAX_AMOUNT;
+        const deliveryCharge = APP_CONSTANTS.DELIVERY_CHARGE;
 
         const total = cartTotal + taxAmount + deliveryCharge;
 
@@ -169,7 +170,7 @@ export class AdminOrderService {
 
         const skip = (page - 1) * limit;
 
-        const where: any = {};
+        const where: Prisma.OrderWhereInput = {};
         if (status) where.orderStatus = status;
         if (userId) where.userId = userId;
         if (paymentMethod) where.paymentMethod = paymentMethod;

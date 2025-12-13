@@ -13,7 +13,7 @@ import { EmailModule } from 'src/mail/email.module';
     PassportModule,
     EmailModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'defaultSecret',
+      secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1d' },
     }),
   ],
@@ -21,4 +21,4 @@ import { EmailModule } from 'src/mail/email.module';
   providers: [AuthService, JwtStrategy],
   exports: [JwtModule, PassportModule]
 })
-export class AuthModule {}
+export class AuthModule { }

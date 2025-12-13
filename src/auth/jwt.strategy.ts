@@ -8,11 +8,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: process.env.JWT_SECRET || 'defaultSecret'
+            secretOrKey: process.env.JWT_SECRET!, // Validated in main.ts or module
         })
+        if (!process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET environment variable is not defined');
+        }
     }
 
-    async validate(payload: any) {
+    async validate(payload: { sub: number; email: string; role: string }) {
         return { userId: payload.sub, email: payload.email, role: payload.role }
     }
 }
