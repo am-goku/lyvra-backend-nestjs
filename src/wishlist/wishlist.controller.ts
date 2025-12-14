@@ -9,22 +9,22 @@ import { WishlistService } from './wishlist.service';
 @Roles(Role.USER)
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class WishlistController {
-    constructor(private readonly wishlistService: WishlistService){};
+    constructor(private readonly wishlistService: WishlistService) { };
 
     @Get()
-    getWishList(@Req() req){
+    getWishList(@Req() req) {
         return this.wishlistService.getWishlist(req.user.userId);
     }
 
     @Post(':productId')
     addToWishList(@Req() req, @Param('productId', ParseIntPipe) productId: number) {
-        if(!productId) throw new Error('No productId provided');
+        if (!productId) throw new Error('No productId provided');
         return this.wishlistService.addToWishlist(req.user.userId, productId);
     }
 
     @Delete(':productId')
     removeOne(@Req() req, @Param('productId', ParseIntPipe) productId: number) {
-        if(!productId) throw new Error('No productId provided');
+        if (!productId) throw new Error('No productId provided');
         return this.wishlistService.removeFromWishlist(req.user.userId, productId);
     }
 

@@ -35,6 +35,12 @@ export class StripeService {
                 orderId: orderId.toString(),
                 userId: userId.toString()
             },
+            payment_intent_data: {
+                metadata: {
+                    orderId: orderId.toString(),
+                    userId: userId.toString()
+                }
+            },
             success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
         })

@@ -133,7 +133,7 @@ export class PaymentService {
         console.log(`✅ Order ${orderId} marked as PAID and cart cleared.`);
     }
 
-    async handleFailedOrCanceledPayment(session: Stripe.Checkout.Session) {
+    async handleFailedOrCanceledPayment(session: Stripe.Checkout.Session | Stripe.PaymentIntent) {
         const orderId = session.metadata?.orderId;
         if (!orderId) {
             console.log('⚠️ No orderId found in session metadata.');

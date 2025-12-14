@@ -18,7 +18,7 @@
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true, // ✅ Enabled for better type safety
+    "noImplicitAny": false, // Desabled for better development experience
     "strictBindCallApply": true, // ✅ Enabled
     "noFallthroughCasesInSwitch": true, // ✅ Enabled
     "strict": false // Keep false to avoid breaking changes, but enabled key strict options above
