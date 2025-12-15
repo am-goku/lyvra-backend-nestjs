@@ -9,7 +9,7 @@ import { AuthResponse } from 'src/models/response';
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
-    @Post('signup')
+    @Post('register/send-otp')
     registerUser(@Body() dto: RegisterDto) {
         return this.authService.registerData(dto);
     }
