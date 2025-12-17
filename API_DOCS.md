@@ -2,8 +2,8 @@
 
 > Complete API reference for Lyvra E-commerce Backend
 
-**Base URL**: `http://localhost:3000`  
-**Version**: 1.0.0  
+**Base URL**: `http://localhost:3000`
+**Version**: 1.0.0
 **Authentication**: JWT Bearer Token
 
 ---
@@ -19,6 +19,7 @@
 - [Payment](#payment)
 - [Wishlist](#wishlist)
 - [Admin](#admin)
+- [Checkout](#checkout)
 - [Health](#health)
 
 ---
@@ -33,8 +34,7 @@ Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "SecurePass123!",
-  "name": "John Doe"
+  "password": "SecurePass123!@#"
 }
 ```
 
@@ -80,7 +80,7 @@ Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "SecurePass123!"
+  "password": "SecurePass123!@#"
 }
 ```
 
@@ -105,7 +105,7 @@ Content-Type: application/json
 ### Get Current User Profile
 
 ```http
-GET /users/profile
+GET /users
 Authorization: Bearer {token}
 ```
 
@@ -125,38 +125,21 @@ Authorization: Bearer {token}
 ### Update User Profile
 
 ```http
-PATCH /users/1
+PUT /users
 Authorization: Bearer {token}
 Content-Type: application/json
 
 {
-  "name": "Jane Doe",
-  "email": "jane@example.com"
+  "email": "jane@example.com",
+  "password": "TopSecret123!"
 }
 ```
 
-### Get User Addresses
+### Delete Current User
 
 ```http
-GET /users/addresses
+DELETE /users
 Authorization: Bearer {token}
-```
-
-### Add User Address
-
-```http
-POST /users/addresses
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "street": "123 Main St",
-  "city": "New York",
-  "state": "NY",
-  "zipCode": "10001",
-  "country": "USA",
-  "type": "HOME"
-}
 ```
 
 ---
@@ -235,7 +218,7 @@ Content-Type: application/json
 }
 ```
 
-### Delete Product (Admin Only - Soft Delete)
+### Delete Product (Admin Only)
 
 ```http
 DELETE /products/1
@@ -249,13 +232,20 @@ Authorization: Bearer {admin_token}
 ### Get All Categories
 
 ```http
-GET /categories
+GET /categories?skip=0&take=20&search=electro
 ```
 
 ### Get Category by ID
 
 ```http
 GET /categories/1
+```
+
+### Get Categories Count
+
+```http
+GET /categories/count/all
+Authorization: Bearer {admin_token}
 ```
 
 ### Create Category (Admin Only)
@@ -273,7 +263,7 @@ image: file
 ### Update Category (Admin Only)
 
 ```http
-PUT /categories/1
+PATCH /categories/1
 Authorization: Bearer {admin_token}
 Content-Type: application/json
 
@@ -283,7 +273,7 @@ Content-Type: application/json
 }
 ```
 
-### Delete Category (Admin Only - Soft Delete)
+### Delete Category (Admin Only)
 
 ```http
 DELETE /categories/1
@@ -301,33 +291,17 @@ GET /cart
 Authorization: Bearer {token}
 ```
 
-**Response**: `200 OK`
+### Get Cart Summary
 
-```json
-{
-  "id": 1,
-  "userId": 1,
-  "total": 199.98,
-  "items": [
-    {
-      "id": 1,
-      "productId": 1,
-      "quantity": 2,
-      "priceSnapshot": 99.99,
-      "product": {
-        "id": 1,
-        "name": "Product Name",
-        "images": [...]
-      }
-    }
-  ]
-}
+```http
+GET /cart/summary
+Authorization: Bearer {token}
 ```
 
 ### Add to Cart
 
 ```http
-POST /cart/add
+POST /cart
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -337,10 +311,10 @@ Content-Type: application/json
 }
 ```
 
-### Update Cart Item Quantity
+### Set Cart Item Quantity
 
 ```http
-PATCH /cart/set
+PATCH /cart/item/quantity
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -353,76 +327,34 @@ Content-Type: application/json
 ### Increment Item Quantity
 
 ```http
-PATCH /cart/increment
+POST /cart/item/1/increment
 Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "productId": 1
-}
 ```
 
 ### Decrement Item Quantity
 
 ```http
-PATCH /cart/decrement
+POST /cart/item/1/decrement
 Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "productId": 1
-}
 ```
 
 ### Remove Item from Cart
 
 ```http
-DELETE /cart/remove
+DELETE /cart/item/1
 Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "productId": 1
-}
 ```
 
 ### Clear Cart
 
 ```http
-DELETE /cart/clear
+DELETE /cart
 Authorization: Bearer {token}
 ```
 
 ---
 
 ## 📦 Orders
-
-### Create Order
-
-```http
-POST /orders
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "addressId": 1,
-  "paymentMethod": "COD"
-}
-```
-
-**Response**: `201 Created`
-
-```json
-{
-  "id": 1,
-  "userId": 1,
-  "total": 199.98,
-  "orderStatus": "PROCESSING",
-  "paymentStatus": "PENDING",
-  "paymentMethod": "COD",
-  "orderItems": [...]
-}
-```
 
 ### Get User Orders
 
@@ -441,29 +373,32 @@ Authorization: Bearer {token}
 ### Cancel Order
 
 ```http
-DELETE /orders/1/cancel
+PUT /orders/1/cancel
 Authorization: Bearer {token}
 ```
 
-**Note**: Stock is automatically restored when order is cancelled.
+**Note**: To create an order, use the Payment endpoints below.
 
 ---
 
 ## 💳 Payment
 
-### Create Checkout Session (Stripe)
+### Create Checkout Session (or Create Order via COD)
 
 ```http
-POST /payment/create-checkout-session
+POST /payment/checkout-session
 Authorization: Bearer {token}
 Content-Type: application/json
 
 {
-  "addressId": 1
+  "addressId": 1,
+  "paymentMethod": "CARD"
 }
 ```
 
-**Response**: `200 OK`
+_Note: If `paymentMethod` is "COD", an order is created immediately. Otherwise, a Stripe session is returned._
+
+**Response (Stripe)**: `200 OK`
 
 ```json
 {
@@ -481,11 +416,6 @@ Stripe-Signature: {signature}
 [Stripe webhook payload]
 ```
 
-**Events Handled**:
-
-- `checkout.session.completed` - Mark order as paid
-- `checkout.session.async_payment_failed` - Mark payment as failed
-
 ---
 
 ## ❤️ Wishlist
@@ -500,60 +430,82 @@ Authorization: Bearer {token}
 ### Add to Wishlist
 
 ```http
-POST /wishlist/add
+POST /wishlist/1
 Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "productId": 1
-}
 ```
+
+_(Parameter is productId)_
 
 ### Remove from Wishlist
 
 ```http
-DELETE /wishlist/remove
+DELETE /wishlist/1
 Authorization: Bearer {token}
-Content-Type: application/json
+```
 
-{
-  "productId": 1
-}
+_(Parameter is productId)_
+
+### Clear Wishlist
+
+```http
+DELETE /wishlist
+Authorization: Bearer {token}
 ```
 
 ---
 
 ## 👨‍💼 Admin
 
-### Get All Users (Admin Only)
+### Get Admin Overview
+
+```http
+GET /admin/overview
+Authorization: Bearer {admin_token}
+```
+
+### Get Sales Analytics
+
+```http
+GET /admin/sales?range=monthly&startDate=2024-01-01
+Authorization: Bearer {admin_token}
+```
+
+### Get Top Products
+
+```http
+GET /admin/top-products
+Authorization: Bearer {admin_token}
+```
+
+### Get User Stats
+
+```http
+GET /admin/user-stats
+Authorization: Bearer {admin_token}
+```
+
+### Get Order Trends
+
+```http
+GET /admin/order-trend
+Authorization: Bearer {admin_token}
+```
+
+### Get All Users (Admin)
 
 ```http
 GET /admin/users?page=1&limit=20&search=john
 Authorization: Bearer {admin_token}
 ```
 
-### Get All Orders (Admin Only)
+### Get User by ID (Admin)
 
 ```http
-GET /admin/orders
+GET /admin/users/1
 Authorization: Bearer {admin_token}
 ```
 
-### Update Order Status (Admin Only)
-
-```http
-PATCH /admin/orders/1/status
-Authorization: Bearer {admin_token}
-Content-Type: application/json
-
-{
-  "status": "SHIPPED"
-}
-```
-
-**Order Statuses**: `PENDING`, `PROCESSING`, `SHIPPED`, `DELIVERED`, `CANCELLED`, `RETURNED`
-
-### Update User Role (Admin Only)
+### Update User Role (Admin)
 
 ```http
 PATCH /admin/users/1/role
@@ -565,11 +517,55 @@ Content-Type: application/json
 }
 ```
 
-### Deactivate User (Admin Only)
+### Deactivate User (Admin)
 
 ```http
 PATCH /admin/users/1/deactivate
 Authorization: Bearer {admin_token}
+```
+
+### Get All Orders (Admin)
+
+```http
+GET /admin/orders
+Authorization: Bearer {admin_token}
+```
+
+### Get Order by ID (Admin)
+
+```http
+GET /admin/orders/1
+Authorization: Bearer {admin_token}
+```
+
+### Update Order Status (Admin)
+
+```http
+PUT /admin/orders/1/status
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+{
+  "status": "SHIPPED"
+}
+```
+
+### Delete Order (Admin)
+
+```http
+DELETE /admin/orders/1
+Authorization: Bearer {admin_token}
+```
+
+---
+
+## 🏁 Checkout
+
+### Get Checkout Details
+
+```http
+GET /checkout
+Authorization: Bearer {token}
 ```
 
 ---
@@ -580,22 +576,6 @@ Authorization: Bearer {admin_token}
 
 ```http
 GET /health
-```
-
-**Response**: `200 OK`
-
-```json
-{
-  "status": "ok",
-  "info": {
-    "database": {
-      "status": "up"
-    },
-    "redis": {
-      "status": "up"
-    }
-  }
-}
 ```
 
 ### Readiness Probe
@@ -609,130 +589,3 @@ GET /health/ready
 ```http
 GET /health/live
 ```
-
-**Response**: `200 OK`
-
-```json
-{
-  "status": "ok",
-  "timestamp": "2024-01-01T00:00:00.000Z"
-}
-```
-
----
-
-## 🔒 Authentication & Authorization
-
-### JWT Token Format
-
-All authenticated endpoints require a Bearer token in the Authorization header:
-
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-### Token Expiration
-
-- Default: 1 day
-- Configurable via `JWT_EXPIRES_IN` environment variable
-
-### Roles
-
-- `USER` - Regular user (default)
-- `ADMIN` - Administrator with elevated permissions
-
----
-
-## 🚨 Error Responses
-
-### 400 Bad Request
-
-```json
-{
-  "statusCode": 400,
-  "message": "Validation failed",
-  "error": "Bad Request"
-}
-```
-
-### 401 Unauthorized
-
-```json
-{
-  "statusCode": 401,
-  "message": "Invalid credentials",
-  "error": "Unauthorized"
-}
-```
-
-### 403 Forbidden
-
-```json
-{
-  "statusCode": 403,
-  "message": "Insufficient permissions",
-  "error": "Forbidden"
-}
-```
-
-### 404 Not Found
-
-```json
-{
-  "statusCode": 404,
-  "message": "Resource not found",
-  "error": "Not Found"
-}
-```
-
-### 429 Too Many Requests
-
-```json
-{
-  "statusCode": 429,
-  "message": "ThrottlerException: Too Many Requests"
-}
-```
-
-**Rate Limit**: 10 requests per minute per IP address
-
----
-
-## 📝 Notes
-
-### Stock Management
-
-- Stock is automatically decremented when an order is placed
-- Stock is restored when an order is cancelled
-- Cart operations validate stock availability
-
-### Price Snapshots
-
-- Cart items store price at the time of adding
-- Order totals use snapshot prices (not current prices)
-- Prevents price changes from affecting pending orders
-
-### Soft Delete
-
-- Products and categories use soft delete
-- Deleted items remain in database with `deletedAt` timestamp
-- Maintains data integrity for historical orders
-
-### Pagination
-
-- Default: 20 items per page
-- Maximum: 100 items per page
-- Products endpoint supports pagination
-
----
-
-## 🔗 Related Resources
-
-- [README](./README.md) - Project setup and overview
-- [Prisma Schema](./prisma/schema/) - Database schema
-- [Environment Variables](./README.md#environment-variables) - Configuration
-
----
-
-**Last Updated**: December 2024  
-**API Version**: 1.0.0
