@@ -94,11 +94,8 @@ export class AuthService {
         // Store in Redis for 10 minutes (600 seconds)
         await this.redis.set(cacheKey, { userId: user.id }, 600);
 
-        // Send Email (Mocked or Real)
-        // In verify-email flow we used otpService, here we use mailService directly or new method
-        // For now, let's use the mailService if it supports generic emails or just log it
-        // Assuming mailService has a method or we fallback to console for dev
-        console.log(`[RESET PASSWORD] Token for ${dto.email}: ${resetToken}`);
+        // Send Email
+        await this.mailService.sendResetPasswordEmail(dto.email, resetToken);
 
         return { message: 'If an account exists, a reset email has been sent.' };
     }

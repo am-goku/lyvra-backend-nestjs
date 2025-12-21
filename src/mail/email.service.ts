@@ -38,4 +38,16 @@ export class EmailService {
             context: { orderData }
         })
     }
+
+    async sendResetPasswordEmail(email: string, token: string) {
+        await this.mailService.sendMail({
+            to: email,
+            subject: 'Reset Your Password',
+            template: 'user-reset-password',
+            context: {
+                token: token,
+                year: new Date().getFullYear()
+            }
+        })
+    }
 }
