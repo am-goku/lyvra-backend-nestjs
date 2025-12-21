@@ -127,7 +127,7 @@ Content-Type: application/json
 ### Get Current User Profile
 
 ```http
-GET /users
+GET /users/me
 Authorization: Bearer {token}
 ```
 
@@ -148,7 +148,7 @@ Authorization: Bearer {token}
 ### Update User Profile
 
 ```http
-PUT /users
+PUT /users/me
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -175,7 +175,7 @@ Content-Type: application/json
 ### Delete Current User
 
 ```http
-DELETE /users
+DELETE /users/me
 Authorization: Bearer {token}
 ```
 

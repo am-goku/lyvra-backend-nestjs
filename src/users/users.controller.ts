@@ -13,12 +13,12 @@ import { Role } from '@prisma/client';
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
-    @Get()
+    @Get('me')
     getUserById(@Req() req: any) {
         return this.usersService.findById(req.user.id);
     }
 
-    @Put()
+    @Put('me')
     updateUser(
         @Req() req: any,
         @Body() dto: UpdateUserDto,
@@ -26,7 +26,7 @@ export class UsersController {
         return this.usersService.update(req.user.id, dto);
     }
 
-    @Delete()
+    @Delete('me')
     deleteUser(@Req() req: any) {
         return this.usersService.remove(req.user.id);
     }
