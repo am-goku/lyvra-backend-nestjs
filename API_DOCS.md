@@ -1131,7 +1131,7 @@ Content-Type: application/json
 _(Returns created Review object)_
 **Error**: `403 Forbidden` if user has not purchased product (Order DELIVERED).
 
-## ⭐ Reviews
+### Get Reviews
 
 ```http
 GET /reviews/product/1?page=1&limit=5
