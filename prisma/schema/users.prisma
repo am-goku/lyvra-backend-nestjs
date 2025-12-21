@@ -16,6 +16,7 @@ model User {
   Wishlist Wishlist[]
 
   Address Address[]
+  reviews Review[]
 }
 
 enum Role {

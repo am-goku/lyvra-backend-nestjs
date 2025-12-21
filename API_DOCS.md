@@ -1098,3 +1098,63 @@ Authorization: Bearer {token}
 
 **Response**: `200 OK`
 _(Returns deleted Address object)_
+
+---
+
+## ⭐ Reviews
+
+### Add Review
+
+```http
+POST /reviews
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "product_id": 1,
+  "rating": 5,
+  "comment": "Great product!"
+}
+```
+
+**Response**: `201 Created`
+_(Returns created Review object)_
+**Error**: `403 Forbidden` if user has not purchased product (Order DELIVERED).
+
+## ⭐ Reviews
+
+```http
+GET /reviews/product/1?page=1&limit=5
+```
+
+**Response**: `200 OK`
+
+```json
+{
+  "reviews": [
+    {
+      "id": 1,
+      "rating": 5,
+      "comment": "Great product!",
+      "userId": 1,
+      "user": { "name": "John Doe" },
+      "createdAt": "..."
+    }
+  ],
+  "meta": {
+    "total": 1,
+    "page": 1,
+    "lastPage": 1
+  }
+}
+```
+
+### Delete Review
+
+```http
+DELETE /reviews/1
+Authorization: Bearer {token}
+```
+
+**Response**: `200 OK`
+_(Returns deleted Review object. User can delete own review, Admin can delete any)_
