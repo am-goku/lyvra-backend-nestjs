@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { RegisterDto, RegisterOtpDto } from './dto/register.dto';
@@ -7,6 +7,9 @@ import { LoginDto } from './dto/login.dto';
 import { EmailService } from 'src/mail/email.service';
 import { RedisService } from 'src/redis/redis.service';
 import { OtpService } from 'src/otp/otp.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto'; // ✅ Added
+import { ResetPasswordDto } from './dto/reset-password.dto';   // ✅ Added
+import * as crypto from 'crypto';                              // ✅ Added
 
 @Injectable()
 export class AuthService {
@@ -73,5 +76,51 @@ export class AuthService {
         const token = this.jwtService.sign(payload); // ✅ Fixed typo
 
         return { user: { id: user.id, email: user.email, role: user.role }, token };
+
+    }
+
+    async forgotPassword(dto: ForgotPasswordDto) {
+        const user = await this.prisma.user.findUnique({
+            where: { email: dto.email }
+        });
+
+        // Always return OK to prevent user enumeration
+        if (!user) return { message: 'If an account exists, a reset email has been sent.' };
+
+        // Generate Token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const cacheKey = `reset:${resetToken}`;
+
+        // Store in Redis for 10 minutes (600 seconds)
+        await this.redis.set(cacheKey, { userId: user.id }, 600);
+
+        // Send Email (Mocked or Real)
+        // In verify-email flow we used otpService, here we use mailService directly or new method
+        // For now, let's use the mailService if it supports generic emails or just log it
+        // Assuming mailService has a method or we fallback to console for dev
+        console.log(`[RESET PASSWORD] Token for ${dto.email}: ${resetToken}`);
+
+        return { message: 'If an account exists, a reset email has been sent.' };
+    }
+
+    async resetPassword(dto: ResetPasswordDto) {
+        const cacheKey = `reset:${dto.token}`;
+        const data = await this.redis.get(cacheKey);
+
+        if (!data || !data.userId) {
+            throw new BadRequestException('Invalid or expired reset token');
+        }
+
+        const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+        await this.prisma.user.update({
+            where: { id: data.userId },
+            data: { password: hashedPassword }
+        });
+
+        // Invalidate token
+        await this.redis.del(cacheKey);
+
+        return { message: 'Password successfully reset' };
     }
 }

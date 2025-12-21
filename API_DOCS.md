@@ -189,8 +189,18 @@ _(Returns the deleted user object)_
 ### Get All Products
 
 ```http
-GET /products?page=1&limit=20&categoryIds=1,2
+GET /products?page=1&limit=20&search=phone&minPrice=100&maxPrice=1000&sortBy=price_asc&categoryIds=1,2
 ```
+
+**Query Parameters**:
+
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 20)
+- `search`: Search term (name or description)
+- `minPrice`: Minimum price
+- `maxPrice`: Maximum price
+- `sortBy`: `price_asc`, `price_desc`, `newest`, `oldest`, `name_asc`, `name_desc`
+- `categoryIds`: Comma-separated category IDs
 
 **Response**: `200 OK`
 

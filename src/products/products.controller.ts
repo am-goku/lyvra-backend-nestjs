@@ -22,6 +22,8 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { GetProductsDto } from './dto/get-products.dto';
+import { ValidationPipe } from '@nestjs/common';
 
 @Controller('products')
 export class ProductsController {
@@ -49,15 +51,8 @@ export class ProductsController {
     }
 
     @Get()
-    findAll(
-        @Query('categoryIds') categoryIds: string,
-        @Query('page') page: string = '1', // ✅ Added pagination
-        @Query('limit') limit: string = '20', // ✅ Added pagination
-    ) {
-        const ids = categoryIds ? categoryIds.split(',').map((id) => +id) : undefined;
-        const pageNum = parseInt(page) || 1;
-        const limitNum = parseInt(limit) || 20;
-        return this.productsService.findAll(ids, pageNum, limitNum);
+    findAll(@Query(ValidationPipe) query: GetProductsDto) {
+        return this.productsService.findAll(query);
     }
 
     @Get(':id')

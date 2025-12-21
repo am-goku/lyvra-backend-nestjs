@@ -3,6 +3,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { GetProductsDto, SortBy } from './dto/get-products.dto'; // ✅ Added
 
 @Injectable()
 export class ProductsService {
@@ -37,25 +38,72 @@ export class ProductsService {
     });
   }
 
-  findAll(categoryIds?: number[], page: number = 1, limit: number = 20) {
+  async findAll(query: GetProductsDto) {
+    const { search, categoryIds, minPrice, maxPrice, sortBy, page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
 
-    return this.prisma.product.findMany({
-      where: {
-        deletedAt: null, // ✅ Only show non-deleted products
-        ...(categoryIds?.length
-          ? { categories: { some: { id: { in: categoryIds } } } }
-          : {}),
+    const where: any = {
+      deletedAt: null,
+    };
+
+    // 1. Text Search
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { description: { contains: search } },
+      ];
+    }
+
+    // 2. Category Filter
+    if (categoryIds) {
+      const ids = categoryIds.split(',').map((id) => +id);
+      where.categories = { some: { id: { in: ids } } };
+    }
+
+    // 3. Price Filter
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.price = {};
+      if (minPrice !== undefined) where.price.gte = minPrice;
+      if (maxPrice !== undefined) where.price.lte = maxPrice;
+    }
+
+    // 4. Sorting
+    let orderBy: any = { createdAt: 'desc' }; // Default
+    if (sortBy) {
+      switch (sortBy) {
+        case SortBy.PRICE_ASC: orderBy = { price: 'asc' }; break;
+        case SortBy.PRICE_DESC: orderBy = { price: 'desc' }; break;
+        case SortBy.NEWEST: orderBy = { createdAt: 'desc' }; break;
+        case SortBy.OLDEST: orderBy = { createdAt: 'asc' }; break;
+        case SortBy.NAME_ASC: orderBy = { name: 'asc' }; break;
+        case SortBy.NAME_DESC: orderBy = { name: 'desc' }; break;
+      }
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: {
+          categories: true,
+          images: true,
+        },
+        skip,
+        take: limit,
+        orderBy,
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
       },
-      include: {
-        categories: true,
-        images: true,
-      },
-      skip, // ✅ Added pagination
-      take: limit, // ✅ Added pagination
-      orderBy: { createdAt: 'desc' }, // ✅ Newest first
-    });
+    };
   }
+
 
   findOne(id: number) {
     return this.prisma.product.findFirst({ // ✅ Changed to findFirst to filter deletedAt
