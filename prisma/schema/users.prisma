@@ -15,8 +15,9 @@ model User {
 
   Wishlist Wishlist[]
 
-  Address Address[]
-  reviews Review[]
+  Address      Address[]
+  reviews      Review[]
+  couponUsages CouponUsage[]
 }
 
 enum Role {

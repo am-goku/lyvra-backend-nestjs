@@ -1158,3 +1158,52 @@ Authorization: Bearer {token}
 
 **Response**: `200 OK`
 _(Returns deleted Review object. User can delete own review, Admin can delete any)_
+
+---
+
+## 🎟️ Coupons
+
+### Create Coupon (Admin)
+
+```http
+POST /coupons
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "code": "SUMMER10",
+  "discountType": "PERCENTAGE",
+  "discountValue": 10,
+  "minOrderValue": 50,
+  "expiresAt": "2025-12-31T23:59:59Z",
+  "usageLimit": 100,
+  "usagePerUser": 1
+}
+```
+
+**Response**: `201 Created`
+
+### Apply Coupon (User)
+
+```http
+POST /coupons/apply
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "code": "SUMMER10"
+}
+```
+
+**Response**: `201 Created`
+_(Returns updated Cart object with linked Coupon)_
+**Error**: `400 Bad Request` if expired, limit reached, or cart value too low.
+
+### List Coupons (Admin)
+
+```http
+GET /coupons
+Authorization: Bearer {token}
+```
+
+**Response**: `200 OK`

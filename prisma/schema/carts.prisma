@@ -3,6 +3,8 @@ model Cart {
   userId    Int        @unique
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade) // ✅ Delete cart when user is deleted
   items     CartItem[]
+  couponId  Int?
+  coupon    Coupon?    @relation(fields: [couponId], references: [id])
   total     Decimal    @default(0.00) // 👈 total price of all items
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt

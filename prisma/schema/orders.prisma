@@ -7,6 +7,11 @@ model Order {
   addressId Int
   address   Address @relation("OrderAddress", fields: [addressId], references: [id], onDelete: Restrict) // ✅ Prevent address deletion if used in orders
 
+  couponId      Int?
+  coupon        Coupon?       @relation(fields: [couponId], references: [id])
+  couponUsages  CouponUsage[]
+  discountTotal Float         @default(0)
+
   total            Float
   orderStatus      OrderStatus   @default(PENDING)
   paymentStatus    PaymentStatus @default(PENDING)

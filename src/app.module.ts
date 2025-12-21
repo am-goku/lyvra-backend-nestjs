@@ -20,6 +20,7 @@ import { OtpModule } from "./otp/otp.module";
 import { HealthModule } from './health/health.module';
 import { AddressModule } from './address/address.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { CouponsModule } from './coupons/coupons.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'; // ✅ Added
 import { APP_GUARD } from '@nestjs/core'; // ✅ Added // ✅ Added
 
@@ -52,6 +53,7 @@ import { APP_GUARD } from '@nestjs/core'; // ✅ Added // ✅ Added
     HealthModule, // ✅ Added
     AddressModule,
     ReviewsModule,
+    CouponsModule,
   ],
   controllers: [AppController],
   providers: [

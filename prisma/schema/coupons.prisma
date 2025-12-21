@@ -1,0 +1,40 @@
+model Coupon {
+    id            Int          @id @default(autoincrement())
+    code          String       @unique
+    discountType  DiscountType
+    discountValue Float
+    minOrderValue Float?
+    startDate     DateTime     @default(now())
+    expiresAt     DateTime
+    isActive      Boolean      @default(true)
+    usageLimit    Int? // Global limit
+    usagePerUser  Int          @default(1)
+    usedCount     Int          @default(0)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    carts  Cart[]
+    orders Order[]
+    usages CouponUsage[]
+}
+
+enum DiscountType {
+    PERCENTAGE
+    FIXED
+}
+
+model CouponUsage {
+    id       Int      @id @default(autoincrement())
+    userId   Int
+    couponId Int
+    orderId  Int
+    usedAt   DateTime @default(now())
+
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+    order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([couponId])
+}
