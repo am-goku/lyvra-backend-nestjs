@@ -10,6 +10,8 @@ describe('AuthController', () => {
         registerData: jest.fn(),
         register: jest.fn(),
         login: jest.fn(),
+        forgotPassword: jest.fn(),
+        resetPassword: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -63,6 +65,28 @@ describe('AuthController', () => {
 
             expect(authService.login).toHaveBeenCalledWith(dto);
             expect(result).toEqual(response);
+        });
+    });
+
+    describe('forgotPassword', () => {
+        it('should call authService.forgotPassword', async () => {
+            const dto = { email: 'test@example.com' };
+            mockAuthService.forgotPassword.mockResolvedValue({ message: 'Email sent' });
+
+            const result = await controller.forgotPassword(dto);
+            expect(authService.forgotPassword).toHaveBeenCalledWith(dto);
+            expect(result).toEqual({ message: 'Email sent' });
+        });
+    });
+
+    describe('resetPassword', () => {
+        it('should call authService.resetPassword', async () => {
+            const dto = { token: 't', newPassword: 'p' };
+            mockAuthService.resetPassword.mockResolvedValue({ message: 'Reset done' });
+
+            const result = await controller.resetPassword(dto);
+            expect(authService.resetPassword).toHaveBeenCalledWith(dto);
+            expect(result).toEqual({ message: 'Reset done' });
         });
     });
 });
