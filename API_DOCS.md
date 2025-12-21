@@ -1007,3 +1007,94 @@ GET /health/live
   "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
+
+---
+
+## 🏠 Address
+
+### Get All Addresses
+
+```http
+GET /address
+Authorization: Bearer {token}
+```
+
+**Response**: `200 OK`
+
+```json
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "fullName": "John Doe",
+    "phone": "+1234567890",
+    "house": "123 Main St",
+    "city": "New York",
+    "state": "NY",
+    "postalCode": "10001",
+    "country": "USA",
+    "isDefault": true,
+    "addressType": "SHIPPING",
+    "createdAt": "...",
+    "updatedAt": "..."
+  }
+]
+```
+
+### Create Address
+
+```http
+POST /address
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "fullName": "John Doe",
+  "phone": "+1234567890",
+  "house": "123 Main St",
+  "city": "New York",
+  "state": "NY",
+  "postalCode": "10001",
+  "country": "USA",
+  "isDefault": true,
+  "addressType": "SHIPPING"
+}
+```
+
+**Response**: `201 Created`
+_(Returns created Address object)_
+
+### Get Single Address
+
+```http
+GET /address/1
+Authorization: Bearer {token}
+```
+
+**Response**: `200 OK`
+_(Returns single Address object)_
+
+### Update Address
+
+```http
+PUT /address/1
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "isDefault": true
+}
+```
+
+**Response**: `200 OK`
+_(Returns updated Address object)_
+
+### Delete Address
+
+```http
+DELETE /address/1
+Authorization: Bearer {token}
+```
+
+**Response**: `200 OK`
+_(Returns deleted Address object)_

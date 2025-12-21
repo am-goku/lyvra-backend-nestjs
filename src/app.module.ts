@@ -18,6 +18,7 @@ import { WishlistModule } from './wishlist/wishlist.module';
 import { RedisModule } from "./redis/redis.module";
 import { OtpModule } from "./otp/otp.module";
 import { HealthModule } from './health/health.module';
+import { AddressModule } from './address/address.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'; // ✅ Added
 import { APP_GUARD } from '@nestjs/core'; // ✅ Added // ✅ Added
 
@@ -48,6 +49,7 @@ import { APP_GUARD } from '@nestjs/core'; // ✅ Added // ✅ Added
     RedisModule,
     OtpModule,
     HealthModule, // ✅ Added
+    AddressModule,
   ],
   controllers: [AppController],
   providers: [
